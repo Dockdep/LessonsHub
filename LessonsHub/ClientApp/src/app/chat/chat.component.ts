@@ -7,10 +7,10 @@ import { Message } from '../models/gemini.model';
 @Component({
   selector: 'app-chat',
   imports: [CommonModule, FormsModule],
-  templateUrl: './chat.html',
-  styleUrl: './chat.css',
+  templateUrl: './chat.component.html',
+  styleUrl: './chat.component.css',
 })
-export class Chat {
+export class ChatComponent {
   messages: Message[] = [];
   userInput: string = '';
   isLoading: boolean = false;
