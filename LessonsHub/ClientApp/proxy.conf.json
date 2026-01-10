@@ -3,7 +3,8 @@
     "target": "https://localhost:7121",
     "secure": false,
     "changeOrigin": true,
-    "logLevel": "debug"
+    "logLevel": "debug",
+    "ws": true
   },
   "/swagger": {
     "target": "https://localhost:7121",

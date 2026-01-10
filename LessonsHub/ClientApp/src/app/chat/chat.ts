@@ -37,7 +37,6 @@ export class Chat {
 
     this.geminiService.sendMessage({ messages: [userMessage] }).subscribe({
       next: (response) => {
-        console.log('Received response:', response);
         const assistantMessage: Message = {
           role: 'assistant',
           content: response.content
@@ -46,8 +45,6 @@ export class Chat {
         this.messages = [...this.messages, assistantMessage];
         this.userInput = '';
         this.isLoading = false;
-        console.log('Messages updated:', this.messages);
-        console.log('Input cleared, isLoading:', this.isLoading);
         // Manually trigger change detection
         this.cdr.detectChanges();
       },
