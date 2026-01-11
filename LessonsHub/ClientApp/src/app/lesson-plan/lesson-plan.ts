@@ -1,0 +1,114 @@
+import { Component, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { LessonPlanService } from '../services/lesson-plan.service';
+import { LessonPlanRequest, LessonPlanResponse, GeneratedLesson } from '../models/lesson-plan.model';
+
+@Component({
+  selector: 'app-lesson-plan',
+  imports: [CommonModule, FormsModule],
+  templateUrl: './lesson-plan.html',
+  styleUrl: './lesson-plan.css',
+})
+export class LessonPlan {
+  planName: string = '';
+  numberOfDays: number = 1;
+  topic: string = '';
+  description: string = '';
+  isLoading: boolean = false;
+  isSaving: boolean = false;
+  error: string = '';
+  saveSuccess: boolean = false;
+  generatedPlan: LessonPlanResponse | null = null;
+
+  constructor(
+    private lessonPlanService: LessonPlanService,
+    private cdr: ChangeDetectorRef
+  ) { }
+
+  generateLessonPlan(): void {
+    if (!this.planName.trim() || !this.topic.trim() || this.numberOfDays < 1) {
+      this.error = 'Please fill in all fields correctly.';
+      return;
+    }
+
+    this.isLoading = true;
+    this.error = '';
+    this.generatedPlan = null;
+
+    const request: LessonPlanRequest = {
+      planName: this.planName,
+      numberOfDays: this.numberOfDays,
+      topic: this.topic,
+      description: this.description
+    };
+
+    this.lessonPlanService.generateLessonPlan(request).subscribe({
+      next: (response) => {
+        console.log('Received response:', response);
+        this.generatedPlan = response;
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error:', error);
+        this.error = 'Error generating lesson plan: ' + (error.error?.message || error.message);
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  saveLessonPlan(): void {
+    if (!this.generatedPlan) return;
+
+    this.isSaving = true;
+    this.saveSuccess = false;
+    this.error = '';
+
+    this.lessonPlanService.saveLessonPlan(this.generatedPlan, this.description).subscribe({
+      next: (response) => {
+        console.log('Save response:', response);
+        this.saveSuccess = true;
+        this.isSaving = false;
+        this.cdr.detectChanges();
+
+        // Hide success message after 3 seconds
+        setTimeout(() => {
+          this.saveSuccess = false;
+          this.cdr.detectChanges();
+        }, 3000);
+      },
+      error: (error) => {
+        console.error('Save error:', error);
+        this.error = 'Error saving lesson plan: ' + (error.error?.message || error.message);
+        this.isSaving = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  resetForm(): void {
+    this.planName = '';
+    this.numberOfDays = 1;
+    this.topic = '';
+    this.description = '';
+    this.error = '';
+    this.saveSuccess = false;
+    this.generatedPlan = null;
+  }
+
+  downloadJson(): void {
+    if (!this.generatedPlan) return;
+
+    const dataStr = JSON.stringify(this.generatedPlan, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+
+    const exportFileDefaultName = `${this.planName.replace(/\s+/g, '_')}_lesson_plan.json`;
+
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  }
+}

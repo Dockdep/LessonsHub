@@ -1,0 +1,25 @@
+Generate a {numberOfDays}-lesson plan for learning {topic}.
+The lesson plan name is: {planName}
+
+{description}
+
+For each lesson, provide:
+1. Lesson number (1 to {numberOfDays})
+2. A descriptive name for the lesson
+3. A short description (1-2 sentences)
+
+Return the response ONLY as a valid JSON object with this exact structure:
+{
+  "planName": "{planName}",
+  "topic": "{topic}",
+  "lessons": [
+    {
+      "lessonNumber": 1,
+      "name": "Lesson name",
+      "shortDescription": "Brief description",
+      "topic": "{topic}"
+    }
+  ]
+}
+
+IMPORTANT: Return ONLY the JSON object, no additional text or markdown formatting.

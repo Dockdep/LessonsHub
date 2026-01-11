@@ -1,2 +1,14 @@
-<app-chat></app-chat>
-<router-outlet />
+<header>
+  <nav class="navbar">
+    <div class="nav-brand">
+      <h1>{{ title() }}</h1>
+    </div>
+    <ul class="nav-links">
+      <li><a routerLink="/lesson-plan" routerLinkActive="active">Lesson Plan Generator</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <router-outlet />
+</main>

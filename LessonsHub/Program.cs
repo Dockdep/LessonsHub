@@ -1,6 +1,12 @@
+using LessonsHub.Data;
 using LessonsHub.Services;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add DbContext with PostgreSQL
+builder.Services.AddDbContext<LessonsHubDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add services to the container
 builder.Services.AddControllers()
@@ -23,6 +29,12 @@ builder.Services.AddCors(options =>
 
 // Add HttpClient for GeminiService
 builder.Services.AddHttpClient<IGeminiService, GeminiService>();
+
+// Add GeminiJsonService for JSON parsing
+builder.Services.AddScoped<IGeminiJsonService, GeminiJsonService>();
+
+// Add PromptService
+builder.Services.AddSingleton<IPromptService, PromptService>();
 
 // Add Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
