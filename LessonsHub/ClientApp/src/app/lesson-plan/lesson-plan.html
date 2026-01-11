@@ -1,102 +1,144 @@
 <div class="lesson-plan-container">
-  <h1>Create Lesson Plan</h1>
+  <mat-card class="form-card">
+    <mat-card-header>
+      <mat-card-title>Create Lesson Plan</mat-card-title>
+      <mat-card-subtitle>Generate a personalized learning path with AI</mat-card-subtitle>
+    </mat-card-header>
 
-  <div class="form-container">
-    <div class="form-group">
-      <label for="planName">Lesson Plan Name</label>
-      <input
-        type="text"
-        id="planName"
-        [(ngModel)]="planName"
-        placeholder="e.g., React Fundamentals Course"
-        [disabled]="isLoading"
-      />
-    </div>
+    <mat-card-content>
+      <form class="lesson-form">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Lesson Plan Name</mat-label>
+          <input
+            matInput
+            [(ngModel)]="planName"
+            name="planName"
+            placeholder="e.g., React Fundamentals Course"
+            [disabled]="isLoading"
+          />
+          <mat-icon matPrefix>edit_note</mat-icon>
+        </mat-form-field>
 
-    <div class="form-group">
-      <label for="numberOfDays">Number of Lessons</label>
-      <input
-        type="number"
-        id="numberOfDays"
-        [(ngModel)]="numberOfDays"
-        min="1"
-        max="365"
-        [disabled]="isLoading"
-      />
-    </div>
+        <div class="row">
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Number of Lessons</mat-label>
+            <input
+              matInput
+              type="number"
+              [(ngModel)]="numberOfDays"
+              name="numberOfDays"
+              min="1"
+              max="365"
+              [disabled]="isLoading"
+            />
+            <mat-icon matPrefix>format_list_numbered</mat-icon>
+          </mat-form-field>
 
-    <div class="form-group">
-      <label for="topic">Topic to Learn</label>
-      <input
-        type="text"
-        id="topic"
-        [(ngModel)]="topic"
-        placeholder="e.g., React, TypeScript, Angular"
-        [disabled]="isLoading"
-      />
-    </div>
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Topic to Learn</mat-label>
+            <input
+              matInput
+              [(ngModel)]="topic"
+              name="topic"
+              placeholder="e.g., React, TypeScript, Angular"
+              [disabled]="isLoading"
+            />
+            <mat-icon matPrefix>school</mat-icon>
+          </mat-form-field>
+        </div>
 
-    <div class="form-group">
-      <label for="description">Description (Optional)</label>
-      <textarea
-        id="description"
-        [(ngModel)]="description"
-        placeholder="Provide any additional context or expectations for this lesson plan..."
-        rows="4"
-        [disabled]="isLoading"
-      ></textarea>
-    </div>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Description (Optional)</mat-label>
+          <textarea
+            matInput
+            [(ngModel)]="description"
+            name="description"
+            placeholder="Provide any additional context or expectations for this lesson plan..."
+            rows="4"
+            [disabled]="isLoading"
+          ></textarea>
+          <mat-icon matPrefix>description</mat-icon>
+        </mat-form-field>
 
-    <div class="button-group">
+        <div *ngIf="error" class="error-message">
+          <mat-icon>error</mat-icon>
+          {{ error }}
+        </div>
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions align="end">
       <button
-        class="btn btn-primary"
-        (click)="generateLessonPlan()"
-        [disabled]="isLoading"
-      >
-        <span *ngIf="!isLoading">Generate Lessons</span>
-        <span *ngIf="isLoading">Generating...</span>
-      </button>
-
-      <button
-        class="btn btn-secondary"
+        mat-raised-button
         (click)="resetForm()"
         [disabled]="isLoading"
       >
+        <mat-icon>refresh</mat-icon>
         Reset
       </button>
-    </div>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="generateLessonPlan()"
+        [disabled]="isLoading"
+      >
+        <mat-icon *ngIf="!isLoading">auto_awesome</mat-icon>
+        <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+        <span *ngIf="!isLoading">Generate Lessons</span>
+        <span *ngIf="isLoading">Generating...</span>
+      </button>
+    </mat-card-actions>
+  </mat-card>
 
-    <div *ngIf="error" class="error-message">
-      {{ error }}
-    </div>
-  </div>
+  <div *ngIf="generatedPlan" class="results-section">
+    <mat-card class="results-card">
+      <mat-card-header>
+        <mat-card-title>{{ generatedPlan.planName }}</mat-card-title>
+        <mat-card-subtitle>
+          <mat-chip>{{ generatedPlan.topic }}</mat-chip>
+          <span class="lesson-count">{{ generatedPlan.lessons.length }} Lessons</span>
+        </mat-card-subtitle>
+      </mat-card-header>
 
-  <div *ngIf="generatedPlan" class="results-container">
-    <div class="results-header">
-      <h2>Generated Lesson Plan: {{ generatedPlan.planName }}</h2>
-      <div class="action-buttons">
-        <button class="btn btn-save" (click)="saveLessonPlan()" [disabled]="isSaving">
+      <mat-card-content>
+        <div *ngIf="saveSuccess" class="success-message">
+          <mat-icon>check_circle</mat-icon>
+          Lesson plan saved successfully!
+        </div>
+
+        <div class="lessons-list">
+          <mat-card *ngFor="let lesson of generatedPlan.lessons" class="lesson-card">
+            <mat-card-header>
+              <div class="lesson-number">{{ lesson.lessonNumber }}</div>
+              <div>
+                <mat-card-title>{{ lesson.name }}</mat-card-title>
+                <mat-card-subtitle>{{ lesson.shortDescription }}</mat-card-subtitle>
+              </div>
+            </mat-card-header>
+          </mat-card>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions align="end">
+        <button
+          mat-raised-button
+          (click)="downloadJson()"
+        >
+          <mat-icon>download</mat-icon>
+          Download JSON
+        </button>
+        <button
+          mat-raised-button
+          color="accent"
+          (click)="saveLessonPlan()"
+          [disabled]="isSaving"
+        >
+          <mat-icon *ngIf="!isSaving">save</mat-icon>
+          <mat-spinner *ngIf="isSaving" diameter="20"></mat-spinner>
           <span *ngIf="!isSaving">Save to Database</span>
           <span *ngIf="isSaving">Saving...</span>
         </button>
-        <button class="btn btn-download" (click)="downloadJson()">
-          Download JSON
-        </button>
-      </div>
-    </div>
-
-    <div *ngIf="saveSuccess" class="success-message">
-      Lesson plan saved successfully!
-    </div>
-
-    <div class="lessons-list">
-      <div *ngFor="let lesson of generatedPlan.lessons" class="lesson-card">
-        <div class="lesson-header">
-          <h3>Lesson {{ lesson.lessonNumber }}: {{ lesson.name }}</h3>
-          <span class="topic-badge">{{ lesson.topic }}</span>
-        </div>
-        <p class="lesson-description">{{ lesson.shortDescription }}</p>
-      </div>
-    </div>
+      </mat-card-actions>
+    </mat-card>
   </div>
 </div>

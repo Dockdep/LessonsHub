@@ -1,12 +1,29 @@
 import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatIconModule } from '@angular/material/icon';
 import { LessonPlanService } from '../services/lesson-plan.service';
 import { LessonPlanRequest, LessonPlanResponse, GeneratedLesson } from '../models/lesson-plan.model';
 
 @Component({
   selector: 'app-lesson-plan',
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatCardModule,
+    MatProgressSpinnerModule,
+    MatChipsModule,
+    MatIconModule
+  ],
   templateUrl: './lesson-plan.html',
   styleUrl: './lesson-plan.css',
 })
