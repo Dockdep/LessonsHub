@@ -10,10 +10,14 @@ builder.Services.AddDbContext<LessonsHubDbContext>(options =>
 
 // Add services to the container
 builder.Services.AddControllers()
-    .AddNewtonsoftJson(options =>
-    {
-        options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
-    });
+	.AddNewtonsoftJson(options =>
+	{
+		// Keep your existing CamelCase setting
+		options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
+
+		// ADD THIS LINE to fix the error:
+		options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+	});
 
 // Add CORS
 builder.Services.AddCors(options =>

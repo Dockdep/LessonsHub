@@ -1,0 +1,65 @@
+<div class="lesson-detail-container">
+  
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div class="error-container" *ngIf="error">
+    <mat-icon color="warn">error</mat-icon>
+    <p>{{ error }}</p>
+    <button mat-button routerLink="/today">Back to Schedule</button>
+  </div>
+
+  <div *ngIf="!isLoading && lesson" class="content-animate">
+    
+    <button mat-button color="primary" routerLink="/today" class="back-button">
+      <mat-icon>arrow_back</mat-icon> Back to Schedule
+    </button>
+
+    <mat-card class="main-card">
+      <mat-card-header>
+        <div mat-card-avatar class="lesson-avatar">
+          <span>{{ lesson.lessonNumber }}</span>
+        </div>
+        <mat-card-title>{{ lesson.name }}</mat-card-title>
+        <mat-card-subtitle *ngIf="lesson.shortDescription">{{ lesson.shortDescription }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <mat-divider></mat-divider>
+
+        <div class="content-section" *ngIf="lesson.content">
+          <h3>Lesson Content</h3>
+          <div class="markdown-body">
+            {{ lesson.content }}
+          </div>
+        </div>
+
+        <div class="exercises-section" *ngIf="lesson.exercises && lesson.exercises.length > 0">
+          <h3>Exercises</h3>
+          <mat-accordion>
+            <mat-expansion-panel *ngFor="let exercise of lesson.exercises; let i = index">
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  Exercise {{ i + 1 }}
+                </mat-panel-title>
+              </mat-expansion-panel-header>
+              
+              <p class="exercise-text">{{ exercise.exerciseText }}</p>
+              
+              <div *ngIf="exercise.answers && exercise.answers.length > 0" class="answers-section">
+                 <h4>Answers:</h4>
+                 <ul>
+                   <li *ngFor="let answer of exercise.answers">
+                     {{ answer.content }}
+                   </li>
+                 </ul>
+              </div>
+
+            </mat-expansion-panel>
+          </mat-accordion>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

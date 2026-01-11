@@ -30,4 +30,9 @@ export class LessonDayService {
   unassignLesson(lessonId: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/unassign/${lessonId}`);
   }
+
+  getLessonDayByDate(date: string): Observable<LessonDay | null> {
+  // Format date as yyyy-MM-dd for the API
+  return this.http.get<LessonDay | null>(`${this.apiUrl}/date/${date}`);
+}
 }

@@ -194,4 +194,50 @@ public class LessonDayController : ControllerBase
             return StatusCode(500, new { message = "An error occurred while unassigning the lesson." });
         }
     }
+
+    [HttpGet("date/{date}")]
+    public async Task<ActionResult<LessonDayDto>> GetLessonDayByDate(DateTime date)
+    {
+        try
+        {
+            // Normalize to UTC Start and End of the requested day
+            var searchDate = DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
+            var nextDay = searchDate.AddDays(1);
+
+            var lessonDay = await _dbContext.LessonDays
+                .Include(ld => ld.Lessons)
+                    .ThenInclude(l => l.LessonPlan)
+                .Where(ld => ld.Date >= searchDate && ld.Date < nextDay)
+                .Select(ld => new LessonDayDto
+                {
+                    Id = ld.Id,
+                    Date = ld.Date,
+                    Name = ld.Name,
+                    ShortDescription = ld.ShortDescription,
+                    Lessons = ld.Lessons.Select(l => new AssignedLessonDto
+                    {
+                        Id = l.Id,
+                        LessonNumber = l.LessonNumber,
+                        Name = l.Name,
+                        ShortDescription = l.ShortDescription,
+                        LessonPlanId = l.LessonPlanId,
+                        LessonPlanName = l.LessonPlan.Name
+                    }).ToList()
+                })
+                .FirstOrDefaultAsync();
+
+            if (lessonDay == null)
+            {
+                // Return 200 with null or empty object to handle "No lessons" gracefully on frontend
+                return Ok(null);
+            }
+
+            return Ok(lessonDay);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving lesson day for date {Date}", date);
+            return StatusCode(500, new { message = "An error occurred while retrieving the lesson day." });
+        }
+    }
 }

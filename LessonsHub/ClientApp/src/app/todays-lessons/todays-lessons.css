@@ -1,0 +1,109 @@
+.todays-lessons-container {
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.header-section {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.header-section h1 {
+  font-size: 2.5rem;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  color: #666;
+  margin: 0;
+}
+
+.schedule-card {
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.today-icon {
+  background-color: #e3f2fd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1976d2;
+}
+
+.day-description {
+  background-color: #fafafa;
+  padding: 16px;
+  border-radius: 8px;
+  margin: 16px 0;
+  border-left: 4px solid #1976d2;
+  color: #555;
+}
+
+.lesson-item {
+  margin-bottom: 8px;
+}
+
+.lesson-badge {
+  background-color: #e0e0e0;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  margin-right: 8px;
+  color: #333;
+}
+
+/* Empty State Styling */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border: 1px dashed #ccc;
+}
+
+.empty-icon-wrapper {
+  background-color: #e8f5e9;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px auto;
+}
+
+.empty-icon-wrapper mat-icon {
+  font-size: 40px;
+  width: 40px;
+  height: 40px;
+  color: #2e7d32;
+}
+
+.empty-state h2 {
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.empty-state p {
+  color: #666;
+  margin-bottom: 24px;
+}
+
+/* Error State */
+.error-state {
+  text-align: center;
+  padding: 32px;
+  color: #d32f2f;
+}
+
+.error-state mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+}

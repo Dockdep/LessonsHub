@@ -1,0 +1,67 @@
+<div class="todays-lessons-container">
+    <div class="header-section">
+        <h1>{{ greeting }}!</h1>
+        <p class="subtitle">Here is your schedule for {{ today | date: 'fullDate' }}</p>
+    </div>
+
+    <mat-progress-bar mode="indeterminate" *ngIf="isLoading"></mat-progress-bar>
+
+    <div class="content-wrapper" *ngIf="!isLoading">
+
+        <div class="error-state" *ngIf="error">
+            <mat-icon color="warn">error_outline</mat-icon>
+            <p>{{ error }}</p>
+            <button mat-stroked-button color="primary" (click)="loadTodaysLessons()">Try Again</button>
+        </div>
+
+        <mat-card class="schedule-card" *ngIf="lessonDay; else noLessons">
+            <mat-card-header>
+                <div mat-card-avatar class="today-icon">
+                    <mat-icon>today</mat-icon>
+                </div>
+                <mat-card-title>{{ lessonDay.name }}</mat-card-title>
+                <mat-card-subtitle>{{ lessonDay.lessons.length }} lessons scheduled</mat-card-subtitle>
+            </mat-card-header>
+
+            <mat-card-content>
+                <p class="day-description" *ngIf="lessonDay.shortDescription">
+                    {{ lessonDay.shortDescription }}
+                </p>
+
+                <mat-list>
+                    <h3 matSubheader>Today's Curriculum</h3>
+                    <mat-list-item *ngFor="let lesson of lessonDay.lessons" class="lesson-item hover-highlight"
+                        [routerLink]="['/lesson', lesson.id]">
+
+                        <mat-icon matListItemIcon>school</mat-icon>
+                        <span matListItemTitle>{{ lesson.name }}</span>
+                        <span matListItemLine>
+                            <span class="lesson-badge">Lesson {{ lesson.lessonNumber }}</span>
+                            From: {{ lesson.lessonPlanName }}
+                        </span>
+                        <mat-icon matListItemMeta>chevron_right</mat-icon>
+                    </mat-list-item>
+                </mat-list>
+            </mat-card-content>
+
+            <mat-card-actions align="end">
+                <button mat-button color="primary" routerLink="/lesson-days">Manage Schedule</button>
+            </mat-card-actions>
+        </mat-card>
+
+        <ng-template #noLessons>
+            <div class="empty-state" *ngIf="!error">
+                <div class="empty-icon-wrapper">
+                    <mat-icon>event_available</mat-icon>
+                </div>
+                <h2>No lessons scheduled for today</h2>
+                <p>You have a free day! Check back tomorrow or schedule a new lesson now.</p>
+                <button mat-raised-button color="primary" routerLink="/lesson-days">
+                    <mat-icon>calendar_today</mat-icon>
+                    Schedule Lessons
+                </button>
+            </div>
+        </ng-template>
+
+    </div>
+</div>
