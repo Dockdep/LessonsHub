@@ -1,0 +1,146 @@
+<div class="lesson-days-container">
+  <div class="header-section">
+    <h1>Lesson Calendar</h1>
+    <p class="subtitle">Schedule your lessons on specific days</p>
+  </div>
+
+  <div class="content-grid">
+    <!-- Left Panel: Assign Lesson -->
+    <mat-card class="assign-card">
+      <mat-card-header>
+        <mat-card-title>Assign Lesson to Day</mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <form class="assign-form">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Select Lesson Plan</mat-label>
+            <mat-select [(ngModel)]="selectedLessonPlan" name="lessonPlan" (selectionChange)="onLessonPlanChange()">
+              <mat-option *ngFor="let plan of lessonPlans" [value]="plan.id">
+                {{ plan.name }} ({{ plan.lessonsCount }} lessons)
+              </mat-option>
+            </mat-select>
+            <mat-icon matPrefix>library_books</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width" *ngIf="availableLessons.length > 0">
+            <mat-label>Select Lesson</mat-label>
+            <mat-select [(ngModel)]="selectedLesson" name="lesson">
+              <mat-option *ngFor="let lesson of availableLessons" [value]="lesson" [disabled]="lesson.isAssigned">
+                Lesson {{ lesson.lessonNumber }}: {{ lesson.name }}
+                <span *ngIf="lesson.isAssigned" class="assigned-badge"> (Already assigned)</span>
+              </mat-option>
+            </mat-select>
+            <mat-icon matPrefix>school</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Select Date</mat-label>
+            <input matInput [matDatepicker]="picker" [(ngModel)]="selectedDate" name="date" (dateChange)="onDateChange($event.value!)">
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+            <mat-icon matPrefix>event</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Day Name (Optional)</mat-label>
+            <input matInput [(ngModel)]="dayName" name="dayName" placeholder="e.g., Monday Morning Session">
+            <mat-icon matPrefix>label</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Day Description (Optional)</mat-label>
+            <textarea matInput [(ngModel)]="dayDescription" name="dayDescription" rows="3"></textarea>
+            <mat-icon matPrefix>description</mat-icon>
+          </mat-form-field>
+
+          <div *ngIf="error" class="error-message">
+            <mat-icon>error</mat-icon>
+            {{ error }}
+          </div>
+
+          <div *ngIf="successMessage" class="success-message">
+            <mat-icon>check_circle</mat-icon>
+            {{ successMessage }}
+          </div>
+        </form>
+      </mat-card-content>
+
+      <mat-card-actions align="end">
+        <button mat-raised-button (click)="resetForm()">
+          <mat-icon>clear</mat-icon>
+          Clear
+        </button>
+        <button mat-raised-button color="primary" (click)="assignLesson()" [disabled]="isAssigning || !selectedLesson">
+          <mat-icon>add_circle</mat-icon>
+          <span *ngIf="!isAssigning">Assign Lesson</span>
+          <span *ngIf="isAssigning">Assigning...</span>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+
+    <!-- Right Panel: Calendar View -->
+    <mat-card class="calendar-card">
+      <mat-card-header>
+        <mat-card-title>Scheduled Lessons</mat-card-title>
+        <mat-card-subtitle>
+          <div class="month-navigation">
+            <button mat-icon-button (click)="previousMonth()">
+              <mat-icon>chevron_left</mat-icon>
+            </button>
+            <span class="month-label">{{ currentMonthName }}</span>
+            <button mat-icon-button (click)="nextMonth()">
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+          </div>
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="lesson-days-list" *ngIf="lessonDays.length > 0; else noLessons">
+          <mat-card *ngFor="let day of lessonDays" class="day-card">
+            <mat-card-header>
+              <div class="day-icon">
+                <mat-icon>event</mat-icon>
+              </div>
+              <div>
+                <mat-card-title>{{ day.name }}</mat-card-title>
+                <mat-card-subtitle>{{ day.date | date: 'fullDate' }}</mat-card-subtitle>
+              </div>
+            </mat-card-header>
+
+            <mat-card-content>
+              <p class="day-description" *ngIf="day.shortDescription">{{ day.shortDescription }}</p>
+
+              <div class="assigned-lessons">
+                <h4 *ngIf="day.lessons.length > 0">Assigned Lessons:</h4>
+                <mat-list>
+                  <mat-list-item *ngFor="let lesson of day.lessons" class="lesson-item">
+                    <div class="lesson-info">
+                      <span class="lesson-badge">Lesson {{ lesson.lessonNumber }}</span>
+                      <div class="lesson-details">
+                        <strong>{{ lesson.name }}</strong>
+                        <small>from {{ lesson.lessonPlanName }}</small>
+                      </div>
+                    </div>
+                    <button mat-icon-button color="warn" (click)="unassignLesson(lesson.id)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </mat-list-item>
+                </mat-list>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <ng-template #noLessons>
+          <div class="empty-state">
+            <mat-icon>event_busy</mat-icon>
+            <p>No lessons scheduled for this month</p>
+            <p class="hint">Assign lessons using the form on the left</p>
+          </div>
+        </ng-template>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
