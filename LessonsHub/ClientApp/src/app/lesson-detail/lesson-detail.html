@@ -31,7 +31,7 @@
         <div class="content-section" *ngIf="lesson.content">
           <h3>Lesson Content</h3>
           <div class="markdown-body">
-            {{ lesson.content }}
+            <markdown [data]="lesson.content"></markdown>
           </div>
         </div>
 

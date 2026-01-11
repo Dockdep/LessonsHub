@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MarkdownModule } from 'ngx-markdown';
 import { LessonService } from '../services/lesson.service';
 import { Lesson } from '../models/lesson.model'; // Ensure this points to the new model file
 
@@ -21,7 +22,8 @@ import { Lesson } from '../models/lesson.model'; // Ensure this points to the ne
     MatIconModule,
     MatDividerModule,
     MatExpansionModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MarkdownModule
   ],
   templateUrl: './lesson-detail.html',
   styleUrl: './lesson-detail.css'

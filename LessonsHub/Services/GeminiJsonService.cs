@@ -30,28 +30,22 @@ public class GeminiJsonService : IGeminiJsonService
 
             string responseContent;
 
-            if (useMockResponse)
+
+            // Create Gemini request
+            var geminiRequest = new GeminiRequest
             {
-                _logger.LogInformation("Using mock Gemini response");
-                responseContent = GetMockResponse();
-            }
-            else
-            {
-                // Create Gemini request
-                var geminiRequest = new GeminiRequest
+                Messages = new List<Message>
                 {
-                    Messages = new List<Message>
-                    {
-                        new Message { Role = "user", Content = prompt }
-                    }
-                };
+                    new Message { Role = "user", Content = prompt }
+                }
+            };
 
-                // Send to Gemini
-                var geminiResponse = await _geminiService.SendMessageAsync(geminiRequest);
+            // Send to Gemini
+            var geminiResponse = await _geminiService.SendMessageAsync(geminiRequest);
 
-                // Clean up the response content
-                responseContent = CleanJsonResponse(geminiResponse.Content);
-            }
+            // Clean up the response content
+            responseContent = CleanJsonResponse(geminiResponse.Content);
+            
 
             _logger.LogDebug("Cleaned response content: {Content}", responseContent);
 

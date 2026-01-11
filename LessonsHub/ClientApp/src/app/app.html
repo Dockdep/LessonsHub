@@ -1,9 +1,12 @@
 <header>
   <nav class="navbar">
     <div class="nav-brand">
-      <h1>{{ title() }}</h1>
+      <a routerLink="/today" style="text-decoration: none; color: inherit;">
+        <h1>{{ title() }}</h1>
+      </a>
     </div>
     <ul class="nav-links">
+      <li><a routerLink="/today" routerLinkActive="active">Today's Lessons</a></li>
       <li><a routerLink="/lesson-plan" routerLinkActive="active">Lesson Plan Generator</a></li>
       <li><a routerLink="/lesson-days" routerLinkActive="active">Lesson Calendar</a></li>
     </ul>
