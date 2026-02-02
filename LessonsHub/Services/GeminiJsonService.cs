@@ -14,11 +14,10 @@ public class GeminiJsonService : IGeminiJsonService
     private readonly ILogger<GeminiJsonService> _logger;
     private readonly IConfiguration _configuration;
 
-    public GeminiJsonService(IGeminiService geminiService, ILogger<GeminiJsonService> logger, IConfiguration configuration)
+    public GeminiJsonService(IGeminiService geminiService, ILogger<GeminiJsonService> logger)
     {
         _geminiService = geminiService;
         _logger = logger;
-        _configuration = configuration;
     }
 
     public async Task<T?> SendMessageAndParseJsonAsync<T>(string prompt) where T : class
@@ -27,9 +26,6 @@ public class GeminiJsonService : IGeminiJsonService
         {
             // Check if mock mode is enabled
             var useMockResponse = _configuration.GetValue<bool>("UseMockGeminiResponse");
-
-            string responseContent;
-
 
             // Create Gemini request
             var geminiRequest = new GeminiRequest
@@ -43,8 +39,8 @@ public class GeminiJsonService : IGeminiJsonService
             // Send to Gemini
             var geminiResponse = await _geminiService.SendMessageAsync(geminiRequest);
 
-            // Clean up the response content
-            responseContent = CleanJsonResponse(geminiResponse.Content);
+			// Clean up the response content
+			string responseContent = CleanJsonResponse(geminiResponse.Content);
             
 
             _logger.LogDebug("Cleaned response content: {Content}", responseContent);
@@ -91,45 +87,5 @@ public class GeminiJsonService : IGeminiJsonService
         }
 
         return cleaned.Trim();
-    }
-
-    private string GetMockResponse()
-    {
-        return @"{
-  ""planName"": ""Angular basic in 5 lessons"",
-  ""topic"": ""Angular basic"",
-  ""lessons"": [
-    {
-      ""lessonNumber"": 1,
-      ""name"": ""Introduction, Setup, and Core Architecture"",
-      ""shortDescription"": ""Learn what Angular is, why it's a powerful TypeScript-based framework for scalable web apps, and set up your first project using the CLI."",
-      ""topic"": ""Angular basic""
-    },
-    {
-      ""lessonNumber"": 2,
-      ""name"": ""Components and Data Binding"",
-      ""shortDescription"": ""Explore the building blocks of Angular and master the four types of data binding to sync data between logic and the UI."",
-      ""topic"": ""Angular basic""
-    },
-    {
-      ""lessonNumber"": 3,
-      ""name"": ""Directives and Pipes"",
-      ""shortDescription"": ""Learn to manipulate the DOM structure with structural directives like NgIf and NgFor, and transform data display using built-in pipes."",
-      ""topic"": ""Angular basic""
-    },
-    {
-      ""lessonNumber"": 4,
-      ""name"": ""Services and Dependency Injection"",
-      ""shortDescription"": ""Discover how to share data and business logic across multiple components efficiently using Angular's modular service system and dependency injection."",
-      ""topic"": ""Angular basic""
-    },
-    {
-      ""lessonNumber"": 5,
-      ""name"": ""Routing and HTTP Communications"",
-      ""shortDescription"": ""Build a complete Single Page Application by implementing navigation between views and fetching real-world data from external APIs."",
-      ""topic"": ""Angular basic""
-    }
-  ]
-}";
     }
 }
