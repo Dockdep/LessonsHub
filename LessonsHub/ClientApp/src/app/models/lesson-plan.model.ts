@@ -1,6 +1,6 @@
 export interface LessonPlanRequest {
   planName: string;
-  numberOfDays: number;
+  numberOfDays: number | null;
   topic: string;
   description: string;
 }

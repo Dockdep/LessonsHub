@@ -1,4 +1,6 @@
+using LessonsHub.Configuration;
 using LessonsHub.Data;
+using LessonsHub.Interfaces;
 using LessonsHub.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,14 +12,11 @@ builder.Services.AddDbContext<LessonsHubDbContext>(options =>
 
 // Add services to the container
 builder.Services.AddControllers()
-	.AddNewtonsoftJson(options =>
-	{
-		// Keep your existing CamelCase setting
-		options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
-
-		// ADD THIS LINE to fix the error:
-		options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
-	});
+    .AddNewtonsoftJson(options =>
+    {
+        options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
+        options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+    });
 
 // Add CORS
 builder.Services.AddCors(options =>
@@ -31,14 +30,17 @@ builder.Services.AddCors(options =>
         });
 });
 
-// Add HttpClient for GeminiService
-builder.Services.AddHttpClient<IGeminiService, GeminiService>();
+// Configure LessonsAiApi settings
+var aiApiSettings = builder.Configuration
+    .GetSection("LessonsAiApi")
+    .Get<LessonsAiApiSettings>() ?? new LessonsAiApiSettings();
 
-// Add GeminiJsonService for JSON parsing
-builder.Services.AddScoped<IGeminiJsonService, GeminiJsonService>();
-
-// Add PromptService
-builder.Services.AddSingleton<IPromptService, PromptService>();
+// Add HttpClient for LessonsAiApiClient
+builder.Services.AddHttpClient<ILessonsAiApiClient, LessonsAiApiClient>(client =>
+{
+    client.BaseAddress = new Uri(aiApiSettings.BaseUrl);
+    client.Timeout = TimeSpan.FromMinutes(aiApiSettings.TimeoutMinutes);
+});
 
 // Add Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
@@ -46,9 +48,9 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
     {
-        Title = "LessonsHub - Gemini API",
+        Title = "LessonsHub API",
         Version = "v1",
-        Description = "API for communicating with Google Gemini AI"
+        Description = "API for LessonsHub educational platform"
     });
 });
 
@@ -66,8 +68,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Gemini API v1");
-        options.RoutePrefix = "swagger"; // Move Swagger to /swagger to avoid conflict with Angular
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "LessonsHub API v1");
+        options.RoutePrefix = "swagger";
     });
 }
 

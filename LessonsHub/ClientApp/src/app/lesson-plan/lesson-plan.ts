@@ -29,7 +29,7 @@ import { LessonPlanRequest, LessonPlanResponse, GeneratedLesson } from '../model
 })
 export class LessonPlan {
   planName: string = '';
-  numberOfDays: number = 1;
+  numberOfDays: number | null = null;
   topic: string = '';
   description: string = '';
   isLoading: boolean = false;
@@ -44,8 +44,8 @@ export class LessonPlan {
   ) { }
 
   generateLessonPlan(): void {
-    if (!this.planName.trim() || !this.topic.trim() || this.numberOfDays < 1) {
-      this.error = 'Please fill in all fields correctly.';
+    if (!this.planName.trim() || !this.topic.trim()) {
+      this.error = 'Please provide a plan name and topic.';
       return;
     }
 
@@ -107,7 +107,7 @@ export class LessonPlan {
 
   resetForm(): void {
     this.planName = '';
-    this.numberOfDays = 1;
+    this.numberOfDays = null;
     this.topic = '';
     this.description = '';
     this.error = '';

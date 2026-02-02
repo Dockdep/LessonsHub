@@ -1,5 +1,7 @@
 using LessonsHub.Data;
-using LessonsHub.Models;
+using LessonsHub.Entities;
+using LessonsHub.Models.Requests;
+using LessonsHub.Models.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -156,8 +158,14 @@ public class LessonDayController : ControllerBase
                     ShortDescription = request.DayDescription
                 };
                 _dbContext.LessonDays.Add(lessonDay);
-                await _dbContext.SaveChangesAsync();
             }
+            else
+            {
+                // Update existing lesson day's name and description
+                lessonDay.Name = request.DayName;
+                lessonDay.ShortDescription = request.DayDescription;
+            }
+            await _dbContext.SaveChangesAsync();
 
             // Assign lesson to the day
             lesson.LessonDayId = lessonDay.Id;

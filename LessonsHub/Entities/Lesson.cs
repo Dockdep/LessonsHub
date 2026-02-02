@@ -1,4 +1,4 @@
-namespace LessonsHub.Models;
+namespace LessonsHub.Entities;
 
 public class Lesson
 {
@@ -17,7 +17,10 @@ public class Lesson
     public LessonDay? LessonDay { get; set; }
 
     public List<Exercise> Exercises { get; set; } = new();
-
-    // History link
     public List<ChatMessage> ChatHistory { get; set; } = new();
+
+    // Resources
+    public List<Video> Videos { get; set; } = new();
+    public List<Book> Books { get; set; } = new();
+    public List<Documentation> Documentation { get; set; } = new();
 }

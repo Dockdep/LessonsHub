@@ -1,4 +1,4 @@
-using LessonsHub.Models;
+using LessonsHub.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace LessonsHub.Data;
@@ -16,6 +16,9 @@ public class LessonsHubDbContext : DbContext
     public DbSet<Exercise> Exercises { get; set; }
     public DbSet<ExerciseAnswer> ExerciseAnswers { get; set; }
     public DbSet<ChatMessage> ChatMessages { get; set; }
+    public DbSet<Video> Videos { get; set; }
+    public DbSet<Book> Books { get; set; }
+    public DbSet<Documentation> Documentation { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -110,6 +113,52 @@ public class LessonsHubDbContext : DbContext
                 .HasForeignKey(e => e.ExerciseId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired(false);
+        });
+
+        // Video configuration
+        modelBuilder.Entity<Video>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Channel).HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(2000);
+            entity.Property(e => e.Url).IsRequired().HasMaxLength(500);
+
+            entity.HasOne(e => e.Lesson)
+                .WithMany(l => l.Videos)
+                .HasForeignKey(e => e.LessonId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Book configuration
+        modelBuilder.Entity<Book>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Author).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.BookName).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.ChapterName).HasMaxLength(500);
+            entity.Property(e => e.Description).HasMaxLength(2000);
+            entity.Property(e => e.Url).HasMaxLength(500);
+
+            entity.HasOne(e => e.Lesson)
+                .WithMany(l => l.Books)
+                .HasForeignKey(e => e.LessonId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Documentation configuration
+        modelBuilder.Entity<Documentation>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Section).HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(2000);
+            entity.Property(e => e.Url).IsRequired().HasMaxLength(500);
+
+            entity.HasOne(e => e.Lesson)
+                .WithMany(l => l.Documentation)
+                .HasForeignKey(e => e.LessonId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

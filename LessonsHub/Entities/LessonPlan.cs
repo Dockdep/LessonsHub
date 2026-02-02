@@ -1,4 +1,4 @@
-namespace LessonsHub.Models;
+namespace LessonsHub.Entities;
 
 public class LessonPlan
 {

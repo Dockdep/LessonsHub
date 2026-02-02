@@ -107,6 +107,7 @@ export class LessonDays implements OnInit {
     this.lessonDayService.getLessonDaysByMonth(this.currentYear, this.currentMonth + 1).subscribe({
       next: (days) => {
         this.lessonDays = days;
+        this.populateFieldsForSelectedDate();
         this.cdr.detectChanges();
       },
       error: (error) => {
@@ -116,10 +117,24 @@ export class LessonDays implements OnInit {
     });
   }
 
+  populateFieldsForSelectedDate(): void {
+    const existingDay = this.getLessonDayForDate(this.selectedDate);
+    if (existingDay) {
+      this.dayName = existingDay.name;
+      this.dayDescription = existingDay.shortDescription;
+    }
+  }
+
   onDateChange(date: Date): void {
     this.selectedDate = date;
-    const formattedDate = this.formatDate(date);
-    this.dayName = `Lesson Day - ${formattedDate}`;
+    const existingDay = this.getLessonDayForDate(date);
+    if (existingDay) {
+      this.dayName = existingDay.name;
+      this.dayDescription = existingDay.shortDescription;
+    } else {
+      this.dayName = '';
+      this.dayDescription = '';
+    }
   }
 
   assignLesson(): void {
@@ -135,7 +150,7 @@ export class LessonDays implements OnInit {
 
     const request = {
       lessonId: this.selectedLesson.id,
-      date: this.selectedDate.toISOString().split('T')[0],
+      date: this.formatDateToYYYYMMDD(this.selectedDate),
       dayName: this.dayName || `Lesson Day - ${this.formatDate(this.selectedDate)}`,
       dayDescription: this.dayDescription || this.selectedLesson.shortDescription
     };
@@ -193,8 +208,15 @@ export class LessonDays implements OnInit {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   }
 
+  formatDateToYYYYMMDD(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   getLessonDayForDate(date: Date): LessonDay | undefined {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = this.formatDateToYYYYMMDD(date);
     return this.lessonDays.find(day => day.date.startsWith(dateStr));
   }
 
