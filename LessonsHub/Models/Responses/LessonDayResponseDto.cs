@@ -1,4 +1,4 @@
-namespace LessonsHub.Models;
+namespace LessonsHub.Models.Responses;
 
 public class LessonDayDto
 {
@@ -38,12 +38,4 @@ public class AvailableLessonDto
     public int LessonPlanId { get; set; }
     public string LessonPlanName { get; set; } = string.Empty;
     public bool IsAssigned { get; set; }
-}
-
-public class AssignLessonRequestDto
-{
-    public int LessonId { get; set; }
-    public string Date { get; set; } = string.Empty;
-    public string DayName { get; set; } = string.Empty;
-    public string DayDescription { get; set; } = string.Empty;
 }

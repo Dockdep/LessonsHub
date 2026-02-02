@@ -1,90 +1,148 @@
 using LessonsHub.Data;
-using LessonsHub.Models;
-using LessonsHub.Services;
+using LessonsHub.Entities;
+using LessonsHub.Interfaces;
+using LessonsHub.Models.Requests;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace LessonsHub.Controllers
+namespace LessonsHub.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class LessonController : ControllerBase
 {
-	[Route("api/[controller]")]
-	[ApiController]
-	public class LessonController : ControllerBase
-	{
-		private readonly LessonsHubDbContext _dbContext;
-		private readonly IGeminiService _geminiService;
-		private readonly IPromptService _promptService;
-		private readonly ILogger<LessonController> _logger;
+    private readonly LessonsHubDbContext _dbContext;
+    private readonly ILessonsAiApiClient _aiApiClient;
+    private readonly ILogger<LessonController> _logger;
 
-		public LessonController(
-			LessonsHubDbContext dbContext,
-			IGeminiService geminiService,
-			IPromptService promptService,
-			ILogger<LessonController> logger)
-		{
-			_dbContext = dbContext;
-			_geminiService = geminiService;
-			_promptService = promptService;
-			_logger = logger;
-		}
+    public LessonController(
+        LessonsHubDbContext dbContext,
+        ILessonsAiApiClient aiApiClient,
+        ILogger<LessonController> logger)
+    {
+        _dbContext = dbContext;
+        _aiApiClient = aiApiClient;
+        _logger = logger;
+    }
 
-		[HttpGet("{id}")]
-		public async Task<ActionResult<Lesson>> GetLesson(int id)
-		{
-			var lesson = await _dbContext.Lessons
-				.Include(l => l.Exercises)
-				.Include(l => l.LessonPlan)
-				.FirstOrDefaultAsync(l => l.Id == id);
+    [HttpGet("{id}")]
+    public async Task<ActionResult<Lesson>> GetLesson(int id)
+    {
+        var lesson = await _dbContext.Lessons
+            .Include(l => l.Exercises)
+            .Include(l => l.LessonPlan)
+            .Include(l => l.Videos)
+            .Include(l => l.Books)
+            .Include(l => l.Documentation)
+            .FirstOrDefaultAsync(l => l.Id == id);
 
-			if (lesson == null) return NotFound();
+        if (lesson == null) return NotFound();
 
-			// Check if content is missing
-			if (string.IsNullOrWhiteSpace(lesson.Content))
-			{
-				_logger.LogInformation("Generating content for Lesson {Id}...", id);
+        var planName = lesson.LessonPlan?.Name ?? "General Course";
+        var planTopic = lesson.LessonPlan?.Topic ?? planName;
+        var planDescription = lesson.LessonPlan?.Description ?? "";
 
-				try
-				{
-					// 1. Prepare Prompt
-					var planName = lesson.LessonPlan?.Name ?? "General Course";
-					var planDescription = lesson.LessonPlan?.Description ?? "";
+        // Generate content if missing
+        if (string.IsNullOrWhiteSpace(lesson.Content))
+        {
+            _logger.LogInformation("Generating content for Lesson {Id}...", id);
 
-					var prompt = _promptService.GetLessonContentPrompt(
-						planName: planName,
-						topic: planName,
-						planDescription: planDescription,
-						lessonNumber: lesson.LessonNumber,
-						lessonName: lesson.Name,
-						lessonDescription: lesson.ShortDescription ?? ""
-					);
+            try
+            {
+                var contentRequest = new AiLessonContentRequest
+                {
+                    PlanName = planName,
+                    Topic = planTopic,
+                    PlanDescription = planDescription,
+                    LessonNumber = lesson.LessonNumber,
+                    LessonName = lesson.Name,
+                    LessonDescription = lesson.ShortDescription ?? ""
+                };
 
-					// 2. Prepare Request
-					var geminiRequest = new GeminiRequest();
-					geminiRequest.Messages.Add(new Message
-					{
-						Role = "user",
-						Content = prompt
-					});
+                var contentResponse = await _aiApiClient.GenerateLessonContentAsync(contentRequest);
 
-					// 3. Call Service
-					// Your service returns a flattened GeminiResponse where .Content IS the text
-					var response = await _geminiService.SendMessageAsync(geminiRequest);
+                if (contentResponse != null && !string.IsNullOrWhiteSpace(contentResponse.Content))
+                {
+                    lesson.Content = contentResponse.Content;
+                    await _dbContext.SaveChangesAsync();
+                    _logger.LogInformation("Content generated and saved for Lesson {Id}", id);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating content for Lesson {Id}", id);
+            }
+        }
 
-					if (!string.IsNullOrWhiteSpace(response.Content))
-					{
-						lesson.Content = response.Content; // Simple assignment!
+        // Generate resources if missing
+        if (!lesson.Videos.Any() && !lesson.Books.Any() && !lesson.Documentation.Any())
+        {
+            _logger.LogInformation("Generating resources for Lesson {Id}...", id);
 
-						await _dbContext.SaveChangesAsync();
-						_logger.LogInformation("Content generated and saved for Lesson {Id}", id);
-					}
-				}
-				catch (Exception ex)
-				{
-					_logger.LogError(ex, "Error generating content for Lesson {Id}", id);
-					// Swallow error so user still sees the lesson structure even if AI fails
-				}
-			}
+            try
+            {
+                var resourcesRequest = new AiLessonResourcesRequest
+                {
+                    Topic = planTopic,
+                    LessonName = lesson.Name,
+                    LessonDescription = lesson.ShortDescription ?? ""
+                };
 
-			return Ok(lesson);
-		}
-	}
+                var resourcesResponse = await _aiApiClient.GenerateLessonResourcesAsync(resourcesRequest);
+
+                if (resourcesResponse != null)
+                {
+                    // Add videos
+                    foreach (var video in resourcesResponse.Videos)
+                    {
+                        lesson.Videos.Add(new Video
+                        {
+                            Title = video.Title,
+                            Channel = video.Channel,
+                            Description = video.Description,
+                            Url = video.Url,
+                            LessonId = lesson.Id
+                        });
+                    }
+
+                    // Add books
+                    foreach (var book in resourcesResponse.Books)
+                    {
+                        lesson.Books.Add(new Book
+                        {
+                            Author = book.Author,
+                            BookName = book.BookName,
+                            ChapterNumber = book.ChapterNumber,
+                            ChapterName = book.ChapterName,
+                            Description = book.Description,
+                            Url = book.Url,
+                            LessonId = lesson.Id
+                        });
+                    }
+
+                    // Add documentation
+                    foreach (var doc in resourcesResponse.Documentation)
+                    {
+                        lesson.Documentation.Add(new Documentation
+                        {
+                            Name = doc.Name,
+                            Section = doc.Section,
+                            Description = doc.Description,
+                            Url = doc.Url,
+                            LessonId = lesson.Id
+                        });
+                    }
+
+                    await _dbContext.SaveChangesAsync();
+                    _logger.LogInformation("Resources generated and saved for Lesson {Id}", id);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating resources for Lesson {Id}", id);
+            }
+        }
+
+        return Ok(lesson);
+    }
 }

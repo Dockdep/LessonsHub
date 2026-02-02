@@ -1,6 +1,8 @@
 using LessonsHub.Data;
-using LessonsHub.Models;
-using LessonsHub.Services;
+using LessonsHub.Entities;
+using LessonsHub.Interfaces;
+using LessonsHub.Models.Requests;
+using LessonsHub.Models.Responses;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LessonsHub.Controllers;
@@ -9,19 +11,16 @@ namespace LessonsHub.Controllers;
 [Route("api/[controller]")]
 public class LessonPlanController : ControllerBase
 {
-    private readonly IGeminiJsonService _geminiJsonService;
-    private readonly IPromptService _promptService;
+    private readonly ILessonsAiApiClient _aiApiClient;
     private readonly LessonsHubDbContext _dbContext;
     private readonly ILogger<LessonPlanController> _logger;
 
     public LessonPlanController(
-        IGeminiJsonService geminiJsonService,
-        IPromptService promptService,
+        ILessonsAiApiClient aiApiClient,
         LessonsHubDbContext dbContext,
         ILogger<LessonPlanController> logger)
     {
-        _geminiJsonService = geminiJsonService;
-        _promptService = promptService;
+        _aiApiClient = aiApiClient;
         _dbContext = dbContext;
         _logger = logger;
     }
@@ -32,28 +31,47 @@ public class LessonPlanController : ControllerBase
         try
         {
             if (string.IsNullOrWhiteSpace(request.PlanName) ||
-                string.IsNullOrWhiteSpace(request.Topic) ||
-                request.NumberOfDays < 1)
+                string.IsNullOrWhiteSpace(request.Topic))
             {
-                return BadRequest(new { message = "Invalid input. Please provide plan name, topic, and valid number of days." });
+                return BadRequest(new { message = "Invalid input. Please provide plan name and topic." });
             }
 
-            // Load the prompt from the external template file
-            var prompt = _promptService.GetLessonPlanPrompt(
-                request.PlanName,
-                request.Topic,
-                request.NumberOfDays,
-                request.Description);
-
-            // Send to Gemini and parse JSON response
-            var lessonPlan = await _geminiJsonService.SendMessageAndParseJsonAsync<LessonPlanResponseDto>(prompt);
-
-            if (lessonPlan == null)
+            // Call the AI API
+            var aiRequest = new AiLessonPlanRequest
             {
-                return StatusCode(500, new { message = "Failed to parse lesson plan from AI response." });
+                PlanName = request.PlanName,
+                Topic = request.Topic,
+                NumberOfLessons = request.NumberOfDays,
+                Description = request.Description
+            };
+
+            var aiResponse = await _aiApiClient.GenerateLessonPlanAsync(aiRequest);
+
+            if (aiResponse == null)
+            {
+                return StatusCode(500, new { message = "Failed to get lesson plan from AI API." });
             }
+
+            // Map AI response to our DTO
+            var lessonPlan = new LessonPlanResponseDto
+            {
+                PlanName = aiResponse.PlanName,
+                Topic = aiResponse.Topic,
+                Lessons = aiResponse.Lessons.Select(l => new GeneratedLessonDto
+                {
+                    LessonNumber = l.LessonNumber,
+                    Name = l.Name,
+                    ShortDescription = l.ShortDescription,
+                    Topic = l.Topic
+                }).ToList()
+            };
 
             return Ok(lessonPlan);
+        }
+        catch (TimeoutException ex)
+        {
+            _logger.LogError(ex, "Timeout generating lesson plan");
+            return StatusCode(504, new { message = "The AI service is taking too long. Please try again." });
         }
         catch (Exception ex)
         {
@@ -92,10 +110,10 @@ public class LessonPlanController : ControllerBase
                     LessonNumber = lessonDto.LessonNumber,
                     Name = lessonDto.Name,
                     ShortDescription = lessonDto.ShortDescription,
-                    Content = string.Empty, // Will be generated later
+                    Content = string.Empty,
                     GeminiPrompt = string.Empty,
                     LessonPlanId = lessonPlan.Id,
-                    LessonDayId = null // Can be assigned to a day later
+                    LessonDayId = null
                 };
 
                 _dbContext.Lessons.Add(lesson);

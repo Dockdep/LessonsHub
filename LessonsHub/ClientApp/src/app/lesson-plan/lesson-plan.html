@@ -21,7 +21,7 @@
 
         <div class="row">
           <mat-form-field appearance="outline" class="half-width">
-            <mat-label>Number of Lessons</mat-label>
+            <mat-label>Number of Lessons (Optional)</mat-label>
             <input
               matInput
               type="number"
@@ -29,6 +29,7 @@
               name="numberOfDays"
               min="1"
               max="365"
+              placeholder="AI will decide"
               [disabled]="isLoading"
             />
             <mat-icon matPrefix>format_list_numbered</mat-icon>

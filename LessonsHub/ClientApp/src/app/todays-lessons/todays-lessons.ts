@@ -44,9 +44,9 @@ export class TodaysLessons implements OnInit {
   loadTodaysLessons(): void {
     this.isLoading = true;
     this.error = '';
-    
-    // Format date as YYYY-MM-DD
-    const dateStr = this.today.toISOString().split('T')[0];
+
+    // Format date as YYYY-MM-DD using local time
+    const dateStr = this.formatDateToYYYYMMDD(this.today);
 
     this.lessonDayService.getLessonDayByDate(dateStr).subscribe({
       next: (data) => {
@@ -69,5 +69,12 @@ export class TodaysLessons implements OnInit {
     if (hour < 12) return 'Good morning';
     if (hour < 18) return 'Good afternoon';
     return 'Good evening';
+  }
+
+  formatDateToYYYYMMDD(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }
