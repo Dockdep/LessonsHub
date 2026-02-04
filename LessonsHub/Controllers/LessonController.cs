@@ -53,6 +53,9 @@ public class LessonController : ControllerBase
                 {
                     PlanName = planName,
                     Topic = planTopic,
+                    LessonType = lesson.LessonType,
+                    LessonTopic = lesson.LessonTopic,
+                    KeyPoints = lesson.KeyPoints ?? new(),
                     PlanDescription = planDescription,
                     LessonNumber = lesson.LessonNumber,
                     LessonName = lesson.Name,
@@ -83,8 +86,10 @@ public class LessonController : ControllerBase
             {
                 var resourcesRequest = new AiLessonResourcesRequest
                 {
+                    LessonType = lesson.LessonType,
                     Topic = planTopic,
                     LessonName = lesson.Name,
+                    LessonTopic = lesson.LessonTopic,
                     LessonDescription = lesson.ShortDescription ?? ""
                 };
 
@@ -115,7 +120,6 @@ public class LessonController : ControllerBase
                             ChapterNumber = book.ChapterNumber,
                             ChapterName = book.ChapterName,
                             Description = book.Description,
-                            Url = book.Url,
                             LessonId = lesson.Id
                         });
                     }
@@ -144,5 +148,123 @@ public class LessonController : ControllerBase
         }
 
         return Ok(lesson);
+    }
+
+    [HttpPost("{id}/generate-exercise")]
+    public async Task<ActionResult<Exercise>> GenerateExercise(int id, [FromQuery] string difficulty = "medium")
+    {
+        var lesson = await _dbContext.Lessons
+            .Include(l => l.LessonPlan)
+            .FirstOrDefaultAsync(l => l.Id == id);
+
+        if (lesson == null) return NotFound();
+
+        if (string.IsNullOrWhiteSpace(lesson.Content))
+        {
+            return BadRequest(new { message = "Lesson content must be generated first." });
+        }
+
+        try
+        {
+            var exerciseRequest = new AiLessonExerciseRequest
+            {
+                LessonType = lesson.LessonType,
+                LessonTopic = lesson.LessonTopic,
+                LessonNumber = lesson.LessonNumber,
+                LessonName = lesson.Name,
+                LessonDescription = lesson.ShortDescription ?? "",
+                LessonContent = lesson.Content,
+                Difficulty = difficulty
+            };
+
+            var exerciseResponse = await _aiApiClient.GenerateLessonExerciseAsync(exerciseRequest);
+
+            if (exerciseResponse == null || string.IsNullOrWhiteSpace(exerciseResponse.Exercise))
+            {
+                return StatusCode(500, new { message = "Failed to generate exercise from AI API." });
+            }
+
+            var exercise = new Exercise
+            {
+                ExerciseText = exerciseResponse.Exercise,
+                Difficulty = difficulty,
+                LessonId = lesson.Id
+            };
+
+            _dbContext.Exercises.Add(exercise);
+            await _dbContext.SaveChangesAsync();
+
+            _logger.LogInformation("Exercise generated and saved for Lesson {Id}", id);
+            return Ok(exercise);
+        }
+        catch (TimeoutException ex)
+        {
+            _logger.LogError(ex, "Timeout generating exercise for Lesson {Id}", id);
+            return StatusCode(504, new { message = "The AI service is taking too long. Please try again." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating exercise for Lesson {Id}", id);
+            return StatusCode(500, new { message = "An error occurred while generating the exercise.", error = ex.Message });
+        }
+    }
+
+    [HttpPost("exercise/{exerciseId}/check")]
+    public async Task<ActionResult<ExerciseAnswer>> CheckExerciseReview(int exerciseId, [FromBody] string answer)
+    {
+        var exercise = await _dbContext.Exercises
+            .Include(e => e.Lesson)
+            .FirstOrDefaultAsync(e => e.Id == exerciseId);
+
+        if (exercise == null) return NotFound();
+
+        if (string.IsNullOrWhiteSpace(answer))
+        {
+            return BadRequest(new { message = "Answer cannot be empty." });
+        }
+
+        try
+        {
+            var reviewRequest = new AiExerciseReviewRequest
+            {
+                LessonType = exercise.Lesson.LessonType,
+                LessonContent = exercise.Lesson.Content,
+                ExerciseContent = exercise.ExerciseText,
+                Difficulty = exercise.Difficulty,
+                Answer = answer
+            };
+
+            var reviewResponse = await _aiApiClient.CheckExerciseReviewAsync(reviewRequest);
+
+            if (reviewResponse == null)
+            {
+                return StatusCode(500, new { message = "Failed to get review from AI API." });
+            }
+
+            var exerciseAnswer = new ExerciseAnswer
+            {
+                UserResponse = answer,
+                SubmittedAt = DateTime.UtcNow,
+                AccuracyLevel = reviewResponse.AccuracyLevel,
+                ReviewText = reviewResponse.ExamReview,
+                ExerciseId = exerciseId
+            };
+
+            _dbContext.ExerciseAnswers.Add(exerciseAnswer);
+            await _dbContext.SaveChangesAsync();
+
+            _logger.LogInformation("Exercise review saved for Exercise {ExerciseId}", exerciseId);
+            return Ok(exerciseAnswer);
+        }
+        catch (TimeoutException ex)
+        {
+            _logger.LogError(ex, "Timeout checking exercise review for Exercise {ExerciseId}", exerciseId);
+            return StatusCode(504, new { message = "The AI service is taking too long. Please try again." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking exercise review for Exercise {ExerciseId}", exerciseId);
+            return StatusCode(500, new { message = "An error occurred while checking the exercise.", error = ex.Message });
+        }
     }
 }

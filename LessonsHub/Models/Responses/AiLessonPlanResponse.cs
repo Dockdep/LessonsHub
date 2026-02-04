@@ -25,6 +25,9 @@ public class AiLessonItem
     [JsonPropertyName("shortDescription")]
     public string ShortDescription { get; set; } = string.Empty;
 
-    [JsonPropertyName("topic")]
-    public string Topic { get; set; } = string.Empty;
+    [JsonPropertyName("lessonTopic")]
+    public string LessonTopic { get; set; } = string.Empty;
+
+    [JsonPropertyName("keyPoints")]
+    public List<string> KeyPoints { get; set; } = new();
 }

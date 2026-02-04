@@ -8,7 +8,6 @@ public class Book
     public int? ChapterNumber { get; set; }
     public string? ChapterName { get; set; }
     public string Description { get; set; } = string.Empty;
-    public string? Url { get; set; }
 
     // Relationship
     public int LessonId { get; set; }

@@ -51,7 +51,9 @@ public class LessonsHubDbContext : DbContext
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.ShortDescription).HasMaxLength(500);
             entity.Property(e => e.Content);
-            entity.Property(e => e.GeminiPrompt);
+            entity.Property(e => e.LessonType).HasMaxLength(200);
+            entity.Property(e => e.LessonTopic).HasMaxLength(200);
+            entity.Property(e => e.KeyPoints).HasColumnType("jsonb");
 
             // Relationship with LessonPlan
             entity.HasOne(e => e.LessonPlan)
@@ -71,6 +73,7 @@ public class LessonsHubDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.ExerciseText).IsRequired();
+            entity.Property(e => e.Difficulty).HasMaxLength(50);
 
             // Relationship with Lesson
             entity.HasOne(e => e.Lesson)
@@ -85,6 +88,8 @@ public class LessonsHubDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.UserResponse).IsRequired();
             entity.Property(e => e.SubmittedAt).IsRequired();
+            entity.Property(e => e.AccuracyLevel);
+            entity.Property(e => e.ReviewText);
 
             // Relationship with Exercise
             entity.HasOne(e => e.Exercise)
@@ -138,7 +143,6 @@ public class LessonsHubDbContext : DbContext
             entity.Property(e => e.BookName).IsRequired().HasMaxLength(500);
             entity.Property(e => e.ChapterName).HasMaxLength(500);
             entity.Property(e => e.Description).HasMaxLength(2000);
-            entity.Property(e => e.Url).HasMaxLength(500);
 
             entity.HasOne(e => e.Lesson)
                 .WithMany(l => l.Books)
