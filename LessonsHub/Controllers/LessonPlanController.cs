@@ -39,6 +39,7 @@ public class LessonPlanController : ControllerBase
             // Call the AI API
             var aiRequest = new AiLessonPlanRequest
             {
+                LessonType = request.LessonType,
                 PlanName = request.PlanName,
                 Topic = request.Topic,
                 NumberOfLessons = request.NumberOfDays,
@@ -62,7 +63,8 @@ public class LessonPlanController : ControllerBase
                     LessonNumber = l.LessonNumber,
                     Name = l.Name,
                     ShortDescription = l.ShortDescription,
-                    Topic = l.Topic
+                    LessonTopic = l.LessonTopic,
+                    KeyPoints = l.KeyPoints
                 }).ToList()
             };
 
@@ -111,8 +113,10 @@ public class LessonPlanController : ControllerBase
                     Name = lessonDto.Name,
                     ShortDescription = lessonDto.ShortDescription,
                     Content = string.Empty,
-                    GeminiPrompt = string.Empty,
+                    LessonType = request.LessonType ?? string.Empty,
                     LessonPlanId = lessonPlan.Id,
+                    LessonTopic = lessonDto.LessonTopic,
+                    KeyPoints = lessonDto.KeyPoints ?? new(),
                     LessonDayId = null
                 };
 

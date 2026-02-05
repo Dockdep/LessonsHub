@@ -1,5 +1,8 @@
+using System.Text.Json;
 using LessonsHub.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace LessonsHub.Data;
 
@@ -51,7 +54,20 @@ public class LessonsHubDbContext : DbContext
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.ShortDescription).HasMaxLength(500);
             entity.Property(e => e.Content);
-            entity.Property(e => e.GeminiPrompt);
+            entity.Property(e => e.LessonType).HasMaxLength(200);
+            entity.Property(e => e.LessonTopic).HasMaxLength(200);
+            var keyPointsConverter = new ValueConverter<List<string>, string>(
+                v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>()
+            );
+            var keyPointsComparer = new ValueComparer<List<string>>(
+                (c1, c2) => c1!.SequenceEqual(c2!),
+                c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                c => c.ToList()
+            );
+            entity.Property(e => e.KeyPoints)
+                .HasConversion(keyPointsConverter)
+                .Metadata.SetValueComparer(keyPointsComparer);
 
             // Relationship with LessonPlan
             entity.HasOne(e => e.LessonPlan)
@@ -71,6 +87,7 @@ public class LessonsHubDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.ExerciseText).IsRequired();
+            entity.Property(e => e.Difficulty).HasMaxLength(50);
 
             // Relationship with Lesson
             entity.HasOne(e => e.Lesson)
@@ -85,6 +102,8 @@ public class LessonsHubDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.UserResponse).IsRequired();
             entity.Property(e => e.SubmittedAt).IsRequired();
+            entity.Property(e => e.AccuracyLevel);
+            entity.Property(e => e.ReviewText);
 
             // Relationship with Exercise
             entity.HasOne(e => e.Exercise)
@@ -138,7 +157,6 @@ public class LessonsHubDbContext : DbContext
             entity.Property(e => e.BookName).IsRequired().HasMaxLength(500);
             entity.Property(e => e.ChapterName).HasMaxLength(500);
             entity.Property(e => e.Description).HasMaxLength(2000);
-            entity.Property(e => e.Url).HasMaxLength(500);
 
             entity.HasOne(e => e.Lesson)
                 .WithMany(l => l.Books)

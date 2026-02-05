@@ -1,18 +1,51 @@
-<header>
-  <nav class="navbar">
-    <div class="nav-brand">
-      <a routerLink="/today" style="text-decoration: none; color: inherit;">
-        <h1>{{ title() }}</h1>
+<div class="app-layout">
+  <!-- Sidebar Navigation -->
+  <nav class="sidebar">
+    <div class="brand">
+      <div class="logo-icon">
+        <mat-icon>school</mat-icon>
+      </div>
+      <span class="brand-name">LessonsHub</span>
+    </div>
+
+    <div class="nav-links">
+      <a routerLink="/today" routerLinkActive="active" class="nav-item">
+        <mat-icon>dashboard</mat-icon>
+        <span>Today</span>
+      </a>
+      <a routerLink="/lesson-plan" routerLinkActive="active" class="nav-item">
+        <mat-icon>auto_awesome</mat-icon>
+        <span>AI Generator</span>
+      </a>
+      <a routerLink="/lesson-days" routerLinkActive="active" class="nav-item">
+        <mat-icon>calendar_month</mat-icon>
+        <span>Scheduler</span>
       </a>
     </div>
-    <ul class="nav-links">
-      <li><a routerLink="/today" routerLinkActive="active">Today's Lessons</a></li>
-      <li><a routerLink="/lesson-plan" routerLinkActive="active">Lesson Plan Generator</a></li>
-      <li><a routerLink="/lesson-days" routerLinkActive="active">Lesson Calendar</a></li>
-    </ul>
-  </nav>
-</header>
 
-<main>
-  <router-outlet />
-</main>
+    <div class="user-profile">
+      <div class="avatar">JD</div>
+      <div class="user-info">
+        <span class="name">John Doe</span>
+        <span class="role">Student</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <header class="top-header">
+      <div class="breadcrumbs">
+        <!-- Breadcrumbs could go here -->
+      </div>
+      <div class="actions">
+        <button mat-icon-button><mat-icon>notifications</mat-icon></button>
+        <button mat-icon-button><mat-icon>settings</mat-icon></button>
+      </div>
+    </header>
+
+    <div class="content-wrapper">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>

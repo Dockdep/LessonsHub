@@ -4,6 +4,9 @@ namespace LessonsHub.Models.Requests;
 
 public class AiLessonPlanRequest
 {
+	[JsonPropertyName("lessonType")]
+	public string LessonType { get; set; } = string.Empty;
+	
     [JsonPropertyName("planName")]
     public string PlanName { get; set; } = string.Empty;
 

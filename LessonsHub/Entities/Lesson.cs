@@ -7,7 +7,9 @@ public class Lesson
     public string Name { get; set; } = string.Empty;
     public string ShortDescription { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
-    public string GeminiPrompt { get; set; } = string.Empty;
+    public string LessonType { get; set; } = string.Empty;
+    public string LessonTopic { get; set; } = string.Empty;
+    public List<string> KeyPoints { get; set; } = new();
 
     // Relationships
     public int LessonPlanId { get; set; }

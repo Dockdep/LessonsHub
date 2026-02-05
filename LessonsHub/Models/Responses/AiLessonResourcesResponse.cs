@@ -51,9 +51,6 @@ public class BookResource
 
     [JsonPropertyName("description")]
     public string Description { get; set; } = string.Empty;
-
-    [JsonPropertyName("url")]
-    public string? Url { get; set; }
 }
 
 public class DocumentationResource
