@@ -30,6 +30,7 @@ public class LessonController : ControllerBase
     {
         var lesson = await _dbContext.Lessons
             .Include(l => l.Exercises)
+                .ThenInclude(e => e.Answers)
             .Include(l => l.LessonPlan)
             .Include(l => l.Videos)
             .Include(l => l.Books)
@@ -78,76 +79,76 @@ public class LessonController : ControllerBase
         }
 
         // Generate resources if missing
-        if (!lesson.Videos.Any() && !lesson.Books.Any() && !lesson.Documentation.Any())
-        {
-            _logger.LogInformation("Generating resources for Lesson {Id}...", id);
+        //if (!lesson.Videos.Any() && !lesson.Books.Any() && !lesson.Documentation.Any())
+        //{
+        //    _logger.LogInformation("Generating resources for Lesson {Id}...", id);
 
-            try
-            {
-                var resourcesRequest = new AiLessonResourcesRequest
-                {
-                    LessonType = lesson.LessonType,
-                    Topic = planTopic,
-                    LessonName = lesson.Name,
-                    LessonTopic = lesson.LessonTopic,
-                    LessonDescription = lesson.ShortDescription ?? ""
-                };
+        //    try
+        //    {
+        //        var resourcesRequest = new AiLessonResourcesRequest
+        //        {
+        //            LessonType = lesson.LessonType,
+        //            Topic = planTopic,
+        //            LessonName = lesson.Name,
+        //            LessonTopic = lesson.LessonTopic,
+        //            LessonDescription = lesson.ShortDescription ?? ""
+        //        };
 
-                var resourcesResponse = await _aiApiClient.GenerateLessonResourcesAsync(resourcesRequest);
+        //        var resourcesResponse = await _aiApiClient.GenerateLessonResourcesAsync(resourcesRequest);
 
-                if (resourcesResponse != null)
-                {
-                    // Add videos
-                    foreach (var video in resourcesResponse.Videos)
-                    {
-                        lesson.Videos.Add(new Video
-                        {
-                            Title = video.Title,
-                            Channel = video.Channel,
-                            Description = video.Description,
-                            Url = video.Url,
-                            LessonId = lesson.Id
-                        });
-                    }
+                //        if (resourcesResponse != null)
+                //        {
+                //            // Add videos
+                //            foreach (var video in resourcesResponse.Videos)
+                //            {
+                //                lesson.Videos.Add(new Video
+                //                {
+                //                    Title = video.Title,
+                //                    Channel = video.Channel,
+                //                    Description = video.Description,
+                //                    Url = video.Url,
+                //                    LessonId = lesson.Id
+                //                });
+                //            }
 
-                    // Add books
-                    foreach (var book in resourcesResponse.Books)
-                    {
-                        lesson.Books.Add(new Book
-                        {
-                            Author = book.Author,
-                            BookName = book.BookName,
-                            ChapterNumber = book.ChapterNumber,
-                            ChapterName = book.ChapterName,
-                            Description = book.Description,
-                            LessonId = lesson.Id
-                        });
-                    }
+                //            // Add books
+                //            foreach (var book in resourcesResponse.Books)
+                //            {
+                //                lesson.Books.Add(new Book
+                //                {
+                //                    Author = book.Author,
+                //                    BookName = book.BookName,
+                //                    ChapterNumber = book.ChapterNumber,
+                //                    ChapterName = book.ChapterName,
+                //                    Description = book.Description,
+                //                    LessonId = lesson.Id
+                //                });
+                //            }
 
-                    // Add documentation
-                    foreach (var doc in resourcesResponse.Documentation)
-                    {
-                        lesson.Documentation.Add(new Documentation
-                        {
-                            Name = doc.Name,
-                            Section = doc.Section,
-                            Description = doc.Description,
-                            Url = doc.Url,
-                            LessonId = lesson.Id
-                        });
-                    }
+                //            // Add documentation
+                //            foreach (var doc in resourcesResponse.Documentation)
+                //            {
+                //                lesson.Documentation.Add(new Documentation
+                //                {
+                //                    Name = doc.Name,
+                //                    Section = doc.Section,
+                //                    Description = doc.Description,
+                //                    Url = doc.Url,
+                //                    LessonId = lesson.Id
+                //                });
+                //            }
 
-                    await _dbContext.SaveChangesAsync();
-                    _logger.LogInformation("Resources generated and saved for Lesson {Id}", id);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error generating resources for Lesson {Id}", id);
-            }
-        }
+                //            await _dbContext.SaveChangesAsync();
+                //            _logger.LogInformation("Resources generated and saved for Lesson {Id}", id);
+                //        }
+                //    }
+                //    catch (Exception ex)
+                //    {
+                //        _logger.LogError(ex, "Error generating resources for Lesson {Id}", id);
+                //    }
+                //}
 
-        return Ok(lesson);
+                return Ok(lesson);
     }
 
     [HttpPost("{id}/generate-exercise")]

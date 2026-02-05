@@ -1,5 +1,8 @@
+using System.Text.Json;
 using LessonsHub.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace LessonsHub.Data;
 
@@ -53,7 +56,18 @@ public class LessonsHubDbContext : DbContext
             entity.Property(e => e.Content);
             entity.Property(e => e.LessonType).HasMaxLength(200);
             entity.Property(e => e.LessonTopic).HasMaxLength(200);
-            entity.Property(e => e.KeyPoints).HasColumnType("jsonb");
+            var keyPointsConverter = new ValueConverter<List<string>, string>(
+                v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>()
+            );
+            var keyPointsComparer = new ValueComparer<List<string>>(
+                (c1, c2) => c1!.SequenceEqual(c2!),
+                c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                c => c.ToList()
+            );
+            entity.Property(e => e.KeyPoints)
+                .HasConversion(keyPointsConverter)
+                .Metadata.SetValueComparer(keyPointsComparer);
 
             // Relationship with LessonPlan
             entity.HasOne(e => e.LessonPlan)

@@ -1,9 +1,12 @@
 export interface LessonPlanRequest {
+  lessonType: string;
   planName: string;
   numberOfDays: number | null;
   topic: string;
   description: string;
 }
+
+export const LESSON_TYPES = ['Technical', 'Language', 'Default'];
 
 export interface GeneratedLesson {
   lessonNumber: number;

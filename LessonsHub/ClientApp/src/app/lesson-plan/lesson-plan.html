@@ -1,145 +1,100 @@
-<div class="lesson-plan-container">
+<div class="generator-container fade-in">
+  
   <mat-card class="form-card">
+    <div class="decorative-bar"></div>
     <mat-card-header>
-      <mat-card-title>Create Lesson Plan</mat-card-title>
-      <mat-card-subtitle>Generate a personalized learning path with AI</mat-card-subtitle>
+      <mat-card-title>Create Curriculum</mat-card-title>
+      <mat-card-subtitle>Configure your AI-generated learning path</mat-card-subtitle>
     </mat-card-header>
-
+    
     <mat-card-content>
-      <form class="lesson-form">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Lesson Plan Name</mat-label>
-          <input
-            matInput
-            [(ngModel)]="planName"
-            name="planName"
-            placeholder="e.g., React Fundamentals Course"
-            [disabled]="isLoading"
-          />
-          <mat-icon matPrefix>edit_note</mat-icon>
-        </mat-form-field>
-
-        <div class="row">
-          <mat-form-field appearance="outline" class="half-width">
-            <mat-label>Number of Lessons (Optional)</mat-label>
-            <input
-              matInput
-              type="number"
-              [(ngModel)]="numberOfDays"
-              name="numberOfDays"
-              min="1"
-              max="365"
-              placeholder="AI will decide"
-              [disabled]="isLoading"
-            />
-            <mat-icon matPrefix>format_list_numbered</mat-icon>
+      <div class="form-grid">
+        <div class="form-col">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Lesson Type</mat-label>
+            <mat-select [(ngModel)]="lessonType">
+              <mat-option *ngFor="let type of lessonTypes" [value]="type">{{ type }}</mat-option>
+            </mat-select>
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="half-width">
-            <mat-label>Topic to Learn</mat-label>
-            <input
-              matInput
-              [(ngModel)]="topic"
-              name="topic"
-              placeholder="e.g., React, TypeScript, Angular"
-              [disabled]="isLoading"
-            />
-            <mat-icon matPrefix>school</mat-icon>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Plan Name</mat-label>
+            <input matInput [(ngModel)]="planName" placeholder="e.g. Intro to Python">
           </mat-form-field>
         </div>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Description (Optional)</mat-label>
-          <textarea
-            matInput
-            [(ngModel)]="description"
-            name="description"
-            placeholder="Provide any additional context or expectations for this lesson plan..."
-            rows="4"
-            [disabled]="isLoading"
-          ></textarea>
-          <mat-icon matPrefix>description</mat-icon>
-        </mat-form-field>
+        <div class="form-col">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Topic</mat-label>
+            <input matInput [(ngModel)]="topic" placeholder="e.g. Data Structures">
+          </mat-form-field>
 
-        <div *ngIf="error" class="error-message">
-          <mat-icon>error</mat-icon>
-          {{ error }}
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Duration (Days)</mat-label>
+            <input matInput type="number" [(ngModel)]="numberOfDays" min="1" max="30">
+          </mat-form-field>
         </div>
-      </form>
+
+        <div class="form-full">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Description & Goals</mat-label>
+            <textarea matInput [(ngModel)]="description" rows="4" placeholder="Describe what you want to achieve..."></textarea>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <div class="error-banner" *ngIf="error">
+        <mat-icon>warning</mat-icon>
+        <span>{{ error }}</span>
+      </div>
     </mat-card-content>
 
     <mat-card-actions align="end">
-      <button
-        mat-raised-button
-        (click)="resetForm()"
-        [disabled]="isLoading"
-      >
-        <mat-icon>refresh</mat-icon>
-        Reset
-      </button>
-      <button
-        mat-raised-button
-        color="primary"
-        (click)="generateLessonPlan()"
-        [disabled]="isLoading"
-      >
-        <mat-icon *ngIf="!isLoading">auto_awesome</mat-icon>
-        <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
-        <span *ngIf="!isLoading">Generate Lessons</span>
-        <span *ngIf="isLoading">Generating...</span>
+      <button mat-button (click)="resetForm()">Reset</button>
+      <button mat-raised-button color="primary" class="generate-btn" (click)="generateLessonPlan()" [disabled]="isLoading">
+        <mat-spinner diameter="20" *ngIf="isLoading" class="spinner-white"></mat-spinner>
+        <span *ngIf="!isLoading">Generate Plan</span>
+        <mat-icon *ngIf="!isLoading" class="btn-icon-right">auto_awesome</mat-icon>
       </button>
     </mat-card-actions>
   </mat-card>
 
-  <div *ngIf="generatedPlan" class="results-section">
-    <mat-card class="results-card">
-      <mat-card-header>
-        <mat-card-title>{{ generatedPlan.planName }}</mat-card-title>
-        <mat-card-subtitle>
+  <!-- Results Section -->
+  <div class="results-area" *ngIf="generatedPlan">
+    <div class="results-header">
+      <div class="plan-meta">
+        <h2>{{ generatedPlan.planName }}</h2>
+        <mat-chip-set>
           <mat-chip>{{ generatedPlan.topic }}</mat-chip>
-          <span class="lesson-count">{{ generatedPlan.lessons.length }} Lessons</span>
-        </mat-card-subtitle>
-      </mat-card-header>
-
-      <mat-card-content>
-        <div *ngIf="saveSuccess" class="success-message">
-          <mat-icon>check_circle</mat-icon>
-          Lesson plan saved successfully!
-        </div>
-
-        <div class="lessons-list">
-          <mat-card *ngFor="let lesson of generatedPlan.lessons" class="lesson-card">
-            <mat-card-header>
-              <div class="lesson-number">{{ lesson.lessonNumber }}</div>
-              <div>
-                <mat-card-title>{{ lesson.name }}</mat-card-title>
-                <mat-card-subtitle>{{ lesson.shortDescription }}</mat-card-subtitle>
-              </div>
-            </mat-card-header>
-          </mat-card>
-        </div>
-      </mat-card-content>
-
-      <mat-card-actions align="end">
-        <button
-          mat-raised-button
-          (click)="downloadJson()"
-        >
-          <mat-icon>download</mat-icon>
-          Download JSON
+          <mat-chip class="count-chip">{{ generatedPlan.lessons.length }} Lessons</mat-chip>
+        </mat-chip-set>
+      </div>
+      
+      <div class="plan-actions">
+        <button mat-stroked-button (click)="downloadJson()">
+          <mat-icon>download</mat-icon> JSON
         </button>
-        <button
-          mat-raised-button
-          color="accent"
-          (click)="saveLessonPlan()"
-          [disabled]="isSaving"
-        >
-          <mat-icon *ngIf="!isSaving">save</mat-icon>
-          <mat-spinner *ngIf="isSaving" diameter="20"></mat-spinner>
-          <span *ngIf="!isSaving">Save to Database</span>
-          <span *ngIf="isSaving">Saving...</span>
+        <button mat-raised-button color="accent" (click)="saveLessonPlan()" [disabled]="isSaving">
+          <mat-spinner diameter="20" *ngIf="isSaving"></mat-spinner>
+          <span *ngIf="!isSaving">Save to Library</span>
         </button>
-      </mat-card-actions>
-    </mat-card>
+      </div>
+    </div>
+
+    <div class="success-message" *ngIf="saveSuccess">
+      <mat-icon>check_circle</mat-icon> Plan saved successfully!
+    </div>
+
+    <div class="lessons-grid">
+      <mat-card class="lesson-result-card" *ngFor="let lesson of generatedPlan.lessons">
+        <div class="card-left">
+          <div class="index-badge">{{ lesson.lessonNumber }}</div>
+        </div>
+        <div class="card-right">
+          <h3 class="result-title">{{ lesson.name }}</h3>
+          <p class="result-desc">{{ lesson.shortDescription }}</p>
+        </div>
+      </mat-card>
+    </div>
   </div>
 </div>

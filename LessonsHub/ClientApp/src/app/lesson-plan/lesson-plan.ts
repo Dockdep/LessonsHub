@@ -8,8 +8,9 @@ import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
 import { LessonPlanService } from '../services/lesson-plan.service';
-import { LessonPlanRequest, LessonPlanResponse, GeneratedLesson } from '../models/lesson-plan.model';
+import { LessonPlanRequest, LessonPlanResponse, GeneratedLesson, LESSON_TYPES } from '../models/lesson-plan.model';
 
 @Component({
   selector: 'app-lesson-plan',
@@ -22,12 +23,15 @@ import { LessonPlanRequest, LessonPlanResponse, GeneratedLesson } from '../model
     MatCardModule,
     MatProgressSpinnerModule,
     MatChipsModule,
-    MatIconModule
+    MatIconModule,
+    MatSelectModule
   ],
   templateUrl: './lesson-plan.html',
   styleUrl: './lesson-plan.css',
 })
 export class LessonPlan {
+  lessonType: string = 'Default';
+  lessonTypes = LESSON_TYPES;
   planName: string = '';
   numberOfDays: number | null = null;
   topic: string = '';
@@ -54,6 +58,7 @@ export class LessonPlan {
     this.generatedPlan = null;
 
     const request: LessonPlanRequest = {
+      lessonType: this.lessonType,
       planName: this.planName,
       numberOfDays: this.numberOfDays,
       topic: this.topic,
@@ -83,7 +88,7 @@ export class LessonPlan {
     this.saveSuccess = false;
     this.error = '';
 
-    this.lessonPlanService.saveLessonPlan(this.generatedPlan, this.description).subscribe({
+    this.lessonPlanService.saveLessonPlan(this.generatedPlan, this.description, this.lessonType).subscribe({
       next: (response) => {
         console.log('Save response:', response);
         this.saveSuccess = true;
@@ -106,6 +111,7 @@ export class LessonPlan {
   }
 
   resetForm(): void {
+    this.lessonType = 'Default';
     this.planName = '';
     this.numberOfDays = null;
     this.topic = '';

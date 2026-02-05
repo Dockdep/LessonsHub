@@ -1,64 +1,216 @@
-.lesson-detail-container {
-  padding: 24px;
-  max-width: 900px;
+:host {
+  --paper-bg: #ffffff;
+  --text-body: #334155;
+}
+
+.lesson-viewer {
+  max-width: 1400px;
   margin: 0 auto;
 }
 
-.loading-container, .error-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 300px;
-  gap: 16px;
+.nav-back {
+  margin-bottom: 1.5rem;
 }
 
-.back-button {
-  margin-bottom: 16px;
+/* Layout */
+.detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 3rem;
 }
 
-.main-card {
-  padding: 16px;
+@media (max-width: 1100px) {
+  .detail-layout { grid-template-columns: 1fr; }
 }
 
-.lesson-avatar {
-  background-color: #673ab7;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  font-weight: bold;
+/* Typography & Hero */
+.lesson-hero {
+  margin-bottom: 3rem;
 }
 
-.video-section {
-  margin: 24px 0;
-  display: flex;
-  justify-content: center;
+.hero-badge {
+  display: inline-block;
+  background: #e0e7ff;
+  color: #4338ca;
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 4px 12px;
+  border-radius: 50px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
 }
 
-.description-section, .content-section, .exercises-section {
-  margin-top: 24px;
+.lesson-heading {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.1;
+  margin: 0 0 1rem 0;
 }
 
-h3 {
-  color: #333;
-  margin-bottom: 12px;
-  font-weight: 500;
-}
-
-.markdown-body {
-  white-space: pre-wrap; /* Preserves line breaks in simple text */
-  color: #444;
+.lesson-lead {
+  font-size: 1.25rem;
+  color: #64748b;
   line-height: 1.6;
 }
 
-.exercise-question {
+/* Markdown Paper */
+.markdown-paper {
+  background: var(--paper-bg);
+  padding: 0;
+  color: var(--text-body);
   font-size: 1.1rem;
-  font-weight: 500;
-  color: #2c3e50;
+  line-height: 1.8;
 }
 
-mat-divider {
-  margin: 24px 0;
+/* Use Deep selectors to style content inside ngx-markdown if ViewEncapsulation is emulated */
+:host ::ng-deep .markdown-paper h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: #1e293b;
+}
+
+:host ::ng-deep .markdown-paper p {
+  margin-bottom: 1.5rem;
+}
+
+:host ::ng-deep .markdown-paper code {
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.9em;
+  color: #0f172a;
+}
+
+:host ::ng-deep .markdown-paper pre {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 1.5rem;
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+/* Sidebar & Exercises */
+.exercises-card {
+  border-radius: 20px !important;
+  border: none;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important;
+  position: sticky;
+  top: 2rem;
+  overflow: hidden;
+}
+
+.header-flex {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  align-items: center;
+}
+
+.icon-faint {
+  opacity: 0.2;
+}
+
+.generator-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.generator-box .density-compact {
+  margin-bottom: -1.25em;
+}
+
+.full-width { width: 100%; }
+.full-width-btn { width: 100%; margin-top: 0.5rem; }
+
+.attempts-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: #e0e7ff;
+  color: #4338ca;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 0.5rem;
+}
+
+/* Expansion Panels */
+.exercise-panel {
+  border-radius: 8px !important;
+  margin-bottom: 1rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: none !important;
+}
+
+.panel-body {
+  padding-top: 1rem;
+}
+
+.exercise-prompt {
+  color: #475569;
+  border-left: 4px solid #e0e7ff;
+  padding-left: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.submit-btn {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+}
+
+/* Feedback History */
+.feedback-history {
+  margin-top: 2rem;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 1rem;
+}
+
+.history-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin-bottom: 1rem;
+}
+
+.attempt-card {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #f1f5f9;
+}
+
+.score-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.score-badge.high { background: #dcfce7; color: #166534; }
+.score-badge.med { background: #fef9c3; color: #854d0e; }
+.score-badge.low { background: #fee2e2; color: #991b1b; }
+
+.user-response {
+  font-size: 0.9rem;
+  color: #334155;
+  margin: 0.5rem 0;
+  white-space: pre-wrap;
+}
+
+.ai-review {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 0.5rem;
 }
