@@ -43,6 +43,7 @@ public class LessonsHubDbContext : DbContext
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Topic).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.NativeLanguage).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).IsRequired();
         });
 

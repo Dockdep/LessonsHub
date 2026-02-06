@@ -42,6 +42,7 @@ export class LessonDetail implements OnInit {
   error = '';
   selectedDifficulty = 'Average';
   difficulties = DIFFICULTIES;
+  exerciseComment = '';
   isGeneratingExercise = false;
   answerTexts: { [exerciseId: number]: string } = {};
   submittingExerciseId: number | null = null;
@@ -82,9 +83,11 @@ export class LessonDetail implements OnInit {
     if (!this.lesson) return;
 
     this.isGeneratingExercise = true;
-    this.lessonService.generateExercise(this.lesson.id, this.selectedDifficulty).subscribe({
+    const comment = this.exerciseComment.trim() || undefined;
+    this.lessonService.generateExercise(this.lesson.id, this.selectedDifficulty, comment).subscribe({
       next: (exercise) => {
         this.lesson!.exercises.push(exercise);
+        this.exerciseComment = '';
         this.isGeneratingExercise = false;
         this.cdr.detectChanges();
       },

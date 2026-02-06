@@ -39,17 +39,24 @@
 
           <mat-card-content>
             <div class="generator-box">
-              <mat-form-field appearance="outline" class="density-compact">
-                <mat-label>Difficulty</mat-label>
-                <mat-select [(ngModel)]="selectedDifficulty">
-                  <mat-option *ngFor="let d of difficulties" [value]="d">{{ d }}</mat-option>
-                </mat-select>
-              </mat-form-field>
+              <div class="generator-row">
+                <mat-form-field appearance="outline" class="density-compact">
+                  <mat-label>Difficulty</mat-label>
+                  <mat-select [(ngModel)]="selectedDifficulty">
+                    <mat-option *ngFor="let d of difficulties" [value]="d">{{ d }}</mat-option>
+                  </mat-select>
+                </mat-form-field>
 
-              <button mat-raised-button color="primary" (click)="generateExercise()" [disabled]="isGeneratingExercise">
-                <span *ngIf="!isGeneratingExercise">Generate Task</span>
-                <mat-spinner diameter="20" *ngIf="isGeneratingExercise"></mat-spinner>
-              </button>
+                <button mat-raised-button color="primary" (click)="generateExercise()" [disabled]="isGeneratingExercise">
+                  <span *ngIf="!isGeneratingExercise">Generate Task</span>
+                  <mat-spinner diameter="20" *ngIf="isGeneratingExercise"></mat-spinner>
+                </button>
+              </div>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Comment (optional)</mat-label>
+                <textarea matInput [(ngModel)]="exerciseComment" rows="2" placeholder="e.g. Focus on past tense, include translation tasks..."></textarea>
+              </mat-form-field>
             </div>
 
             <div class="exercises-list">

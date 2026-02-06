@@ -15,8 +15,12 @@ export class LessonService {
     return this.http.get<Lesson>(`${this.apiUrl}/${id}`);
   }
 
-  generateExercise(lessonId: number, difficulty: string): Observable<Exercise> {
-    return this.http.post<Exercise>(`${this.apiUrl}/${lessonId}/generate-exercise?difficulty=${difficulty}`, {});
+  generateExercise(lessonId: number, difficulty: string, comment?: string): Observable<Exercise> {
+    let url = `${this.apiUrl}/${lessonId}/generate-exercise?difficulty=${difficulty}`;
+    if (comment) {
+      url += `&comment=${encodeURIComponent(comment)}`;
+    }
+    return this.http.post<Exercise>(url, {});
   }
 
   submitExerciseAnswer(exerciseId: number, answer: string): Observable<ExerciseAnswer> {

@@ -24,4 +24,10 @@ public class AiLessonExerciseRequest
 
     [JsonPropertyName("difficulty")]
     public string Difficulty { get; set; } = string.Empty;
+
+    [JsonPropertyName("comment")]
+    public string? Comment { get; set; }
+
+    [JsonPropertyName("nativeLanguage")]
+    public string? NativeLanguage { get; set; }
 }

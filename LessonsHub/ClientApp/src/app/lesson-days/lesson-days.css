@@ -165,10 +165,14 @@
   border-color: #667eea;
 }
 
-.chip-content {
+a.chip-content {
   display: flex;
   align-items: center;
   gap: 1rem;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  flex: 1;
 }
 
 .chip-num {

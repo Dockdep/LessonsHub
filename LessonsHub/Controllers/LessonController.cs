@@ -152,7 +152,7 @@ public class LessonController : ControllerBase
     }
 
     [HttpPost("{id}/generate-exercise")]
-    public async Task<ActionResult<Exercise>> GenerateExercise(int id, [FromQuery] string difficulty = "medium")
+    public async Task<ActionResult<Exercise>> GenerateExercise(int id, [FromQuery] string difficulty = "medium", [FromQuery] string? comment = null)
     {
         var lesson = await _dbContext.Lessons
             .Include(l => l.LessonPlan)
@@ -175,7 +175,9 @@ public class LessonController : ControllerBase
                 LessonName = lesson.Name,
                 LessonDescription = lesson.ShortDescription ?? "",
                 LessonContent = lesson.Content,
-                Difficulty = difficulty
+                Difficulty = difficulty,
+                Comment = comment,
+                NativeLanguage = lesson.LessonPlan?.NativeLanguage
             };
 
             var exerciseResponse = await _aiApiClient.GenerateLessonExerciseAsync(exerciseRequest);

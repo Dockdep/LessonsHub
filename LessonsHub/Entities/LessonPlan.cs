@@ -6,6 +6,7 @@ public class LessonPlan
     public string Name { get; set; } = string.Empty;
     public string Topic { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public string? NativeLanguage { get; set; }
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
     // One LessonPlan can have multiple Lessons

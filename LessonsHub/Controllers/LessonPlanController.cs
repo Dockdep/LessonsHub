@@ -98,6 +98,7 @@ public class LessonPlanController : ControllerBase
                 Name = request.LessonPlan.PlanName,
                 Topic = request.LessonPlan.Topic,
                 Description = request.Description ?? string.Empty,
+                NativeLanguage = request.NativeLanguage,
                 CreatedDate = DateTime.UtcNow
             };
 

@@ -19,14 +19,19 @@
 
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Plan Name</mat-label>
-            <input matInput [(ngModel)]="planName" placeholder="e.g. Intro to Python">
+            <input matInput [(ngModel)]="planName" placeholder="e.g. Intro to Python" required>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width" *ngIf="lessonType === 'Language'">
+            <mat-label>Native Language</mat-label>
+            <input matInput [(ngModel)]="nativeLanguage" placeholder="e.g. Ukrainian, Spanish">
           </mat-form-field>
         </div>
 
         <div class="form-col">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Topic</mat-label>
-            <input matInput [(ngModel)]="topic" placeholder="e.g. Data Structures">
+            <input matInput [(ngModel)]="topic" placeholder="e.g. Data Structures" required>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="full-width">

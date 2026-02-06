@@ -1,5 +1,5 @@
 :host {
-  --paper-bg: #ffffff;
+  --paper-bg: #f8fafc;
   --text-body: #334155;
 }
 
@@ -86,6 +86,16 @@
   color: #0f172a;
 }
 
+:host ::ng-deep .markdown-paper ol,
+:host ::ng-deep .markdown-paper ul,
+:host ::ng-deep .exercise-prompt ol,
+:host ::ng-deep .exercise-prompt ul,
+:host ::ng-deep .ai-review ol,
+:host ::ng-deep .ai-review ul {
+  padding-left: 2rem;
+  margin-bottom: 1rem;
+}
+
 :host ::ng-deep .markdown-paper pre {
   background: #1e293b;
   color: #e2e8f0;
@@ -117,16 +127,22 @@
 
 .generator-box {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0.5rem;
   background: #f8fafc;
   padding: 1rem;
   border-radius: 12px;
   margin-bottom: 1.5rem;
 }
 
-.generator-box .density-compact {
+.generator-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+.generator-row .density-compact {
   margin-bottom: -1.25em;
 }
 
@@ -160,6 +176,7 @@
   border-left: 4px solid #e0e7ff;
   padding-left: 1rem;
   margin-bottom: 1.5rem;
+  line-height: 1.8;
 }
 
 .submit-btn {
@@ -213,4 +230,5 @@
   font-size: 0.85rem;
   color: #64748b;
   margin-top: 0.5rem;
+  line-height: 1.8;
 }
