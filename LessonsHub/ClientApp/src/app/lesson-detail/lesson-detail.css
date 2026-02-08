@@ -107,6 +107,35 @@
   margin-bottom: 1rem;
 }
 
+:host ::ng-deep .markdown-paper table,
+:host ::ng-deep .ai-review table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.95rem;
+}
+
+:host ::ng-deep .markdown-paper th,
+:host ::ng-deep .ai-review th {
+  background: #e0e7ff;
+  color: #1e293b;
+  font-weight: 700;
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #c7d2fe;
+}
+
+:host ::ng-deep .markdown-paper td,
+:host ::ng-deep .ai-review td {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+:host ::ng-deep .markdown-paper tr:nth-child(even),
+:host ::ng-deep .ai-review tr:nth-child(even) {
+  background: #f1f5f9;
+}
+
 :host ::ng-deep .markdown-paper pre {
   background: #1e293b;
   color: #e2e8f0;
@@ -136,25 +165,17 @@
   opacity: 0.2;
 }
 
-.generator-box {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  background: #f8fafc;
-  padding: 1rem;
-  border-radius: 12px;
+.generate-btn-row {
   margin-bottom: 1.5rem;
 }
 
-.generator-row {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
+.generate-btn-row button {
+  border-radius: 12px !important;
+  font-weight: 600 !important;
 }
 
-.generator-row .density-compact {
-  margin-bottom: -1.25em;
+.spinner-white ::ng-deep circle {
+  stroke: white !important;
 }
 
 .full-width { width: 100%; }
@@ -184,10 +205,96 @@
 
 .exercise-prompt {
   color: #475569;
-  border-left: 4px solid #e0e7ff;
-  padding-left: 1rem;
+  background: #f8fafc;
+  border-left: 4px solid #c7d2fe;
+  border-radius: 0 12px 12px 0;
+  padding: 1.5rem 1.5rem 1.5rem 1.25rem;
   margin-bottom: 1.5rem;
   line-height: 1.8;
+  font-size: 0.95rem;
+}
+
+:host ::ng-deep .exercise-prompt h1,
+:host ::ng-deep .exercise-prompt h2,
+:host ::ng-deep .exercise-prompt h3 {
+  color: #1e293b;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.3;
+}
+
+:host ::ng-deep .exercise-prompt h1:first-child,
+:host ::ng-deep .exercise-prompt h2:first-child,
+:host ::ng-deep .exercise-prompt h3:first-child {
+  margin-top: 0;
+}
+
+:host ::ng-deep .exercise-prompt h1 { font-size: 1.4rem; font-weight: 800; }
+:host ::ng-deep .exercise-prompt h2 { font-size: 1.15rem; font-weight: 700; }
+:host ::ng-deep .exercise-prompt h3 { font-size: 1rem; font-weight: 700; color: #334155; }
+
+:host ::ng-deep .exercise-prompt p {
+  margin-bottom: 1rem;
+}
+
+:host ::ng-deep .exercise-prompt strong {
+  color: #1e293b;
+  font-weight: 700;
+}
+
+:host ::ng-deep .exercise-prompt em {
+  color: #6366f1;
+  font-style: italic;
+}
+
+:host ::ng-deep .exercise-prompt hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 1.25rem 0;
+}
+
+:host ::ng-deep .exercise-prompt code {
+  background: #e0e7ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.88em;
+  color: #4338ca;
+}
+
+:host ::ng-deep .exercise-prompt table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+:host ::ng-deep .exercise-prompt th {
+  background: #e0e7ff;
+  color: #1e293b;
+  font-weight: 700;
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #c7d2fe;
+}
+
+:host ::ng-deep .exercise-prompt td {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+:host ::ng-deep .exercise-prompt tr:nth-child(even) {
+  background: #f1f5f9;
+}
+
+:host ::ng-deep .exercise-prompt blockquote {
+  border-left: 3px solid #c7d2fe;
+  background: #eef2ff;
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: 0 8px 8px 0;
+  color: #4338ca;
+  font-style: italic;
 }
 
 .submit-btn {
@@ -203,12 +310,33 @@
   padding-top: 1rem;
 }
 
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .history-label {
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
   color: #94a3b8;
-  margin-bottom: 1rem;
+}
+
+.retry-btn {
+  font-size: 0.75rem !important;
+  border-radius: 8px !important;
+  color: #6d63c2 !important;
+  border-color: #6d63c2 !important;
+}
+
+.retry-btn mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
 }
 
 .attempt-card {

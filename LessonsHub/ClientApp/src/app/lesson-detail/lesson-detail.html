@@ -39,25 +39,12 @@
           </mat-card-header>
 
           <mat-card-content>
-            <div class="generator-box">
-              <div class="generator-row">
-                <mat-form-field appearance="outline" class="density-compact">
-                  <mat-label>Difficulty</mat-label>
-                  <mat-select [(ngModel)]="selectedDifficulty">
-                    <mat-option *ngFor="let d of difficulties" [value]="d">{{ d }}</mat-option>
-                  </mat-select>
-                </mat-form-field>
-
-                <button mat-raised-button color="primary" (click)="generateExercise()" [disabled]="isGeneratingExercise">
-                  <span *ngIf="!isGeneratingExercise">Generate Task</span>
-                  <mat-spinner diameter="20" *ngIf="isGeneratingExercise"></mat-spinner>
-                </button>
-              </div>
-
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Comment (optional)</mat-label>
-                <textarea matInput [(ngModel)]="exerciseComment" rows="2" placeholder="e.g. Focus on past tense, include translation tasks..."></textarea>
-              </mat-form-field>
+            <div class="generate-btn-row">
+              <button mat-raised-button color="primary" (click)="openGenerateDialog()" [disabled]="isGeneratingExercise">
+                <mat-icon *ngIf="!isGeneratingExercise">auto_awesome</mat-icon>
+                <mat-spinner diameter="20" *ngIf="isGeneratingExercise" class="spinner-white"></mat-spinner>
+                <span>Generate Task</span>
+              </button>
             </div>
 
             <div class="exercises-list">
@@ -80,7 +67,16 @@
 
                     <!-- Previous Attempts -->
                     <div class="feedback-history" *ngIf="exercise.answers && exercise.answers.length > 0">
-                      <div class="history-label">Previous Attempts</div>
+                      <div class="history-header">
+                        <span class="history-label">Previous Attempts</span>
+                        <button mat-stroked-button class="retry-btn"
+                          (click)="openGenerateDialog(exercise.answers[exercise.answers.length - 1].reviewText)"
+                          [disabled]="isGeneratingExercise"
+                          *ngIf="exercise.answers[exercise.answers.length - 1].reviewText">
+                          <mat-icon>replay</mat-icon>
+                          Generate Task Based on Review
+                        </button>
+                      </div>
                       <div class="attempt-card" *ngFor="let answer of exercise.answers">
                         <div class="attempt-meta">
                           <span class="score-badge"
@@ -101,7 +97,7 @@
                     <!-- Submit New Answer -->
                     <div class="answer-section">
                       <mat-form-field appearance="outline" class="full-width">
-                        <mat-label>Your Answer</mat-label>
+                        <mat-label>Your Response</mat-label>
                         <textarea matInput [(ngModel)]="answerTexts[exercise.id]" rows="3" placeholder="Type your solution..."></textarea>
                       </mat-form-field>
 

@@ -23,6 +23,14 @@ export class LessonService {
     return this.http.post<Exercise>(url, {});
   }
 
+  retryExercise(lessonId: number, difficulty: string, review: string, comment?: string): Observable<Exercise> {
+    let url = `${this.apiUrl}/${lessonId}/retry-exercise?difficulty=${encodeURIComponent(difficulty)}&review=${encodeURIComponent(review)}`;
+    if (comment) {
+      url += `&comment=${encodeURIComponent(comment)}`;
+    }
+    return this.http.post<Exercise>(url, {});
+  }
+
   submitExerciseAnswer(exerciseId: number, answer: string): Observable<ExerciseAnswer> {
     return this.http.post<ExerciseAnswer>(`${this.apiUrl}/exercise/${exerciseId}/check`, JSON.stringify(answer), {
       headers: { 'Content-Type': 'application/json' }

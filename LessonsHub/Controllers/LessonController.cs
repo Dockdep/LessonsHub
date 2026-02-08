@@ -212,6 +212,73 @@ public class LessonController : ControllerBase
         }
     }
 
+    [HttpPost("{id}/retry-exercise")]
+    public async Task<ActionResult<Exercise>> RetryExercise(int id, [FromQuery] string difficulty = "medium", [FromQuery] string? comment = null, [FromQuery] string review = "")
+    {
+        var lesson = await _dbContext.Lessons
+            .Include(l => l.LessonPlan)
+            .FirstOrDefaultAsync(l => l.Id == id);
+
+        if (lesson == null) return NotFound();
+
+        if (string.IsNullOrWhiteSpace(lesson.Content))
+        {
+            return BadRequest(new { message = "Lesson content must be generated first." });
+        }
+
+        if (string.IsNullOrWhiteSpace(review))
+        {
+            return BadRequest(new { message = "Review text is required for retry." });
+        }
+
+        try
+        {
+            var retryRequest = new AiExerciseRetryRequest
+            {
+                LessonType = lesson.LessonType,
+                LessonTopic = lesson.LessonTopic,
+                LessonNumber = lesson.LessonNumber,
+                LessonName = lesson.Name,
+                LessonDescription = lesson.ShortDescription ?? "",
+                LessonContent = lesson.Content,
+                Difficulty = difficulty,
+                Review = review,
+                Comment = comment,
+                NativeLanguage = lesson.LessonPlan?.NativeLanguage
+            };
+
+            var exerciseResponse = await _aiApiClient.RetryLessonExerciseAsync(retryRequest);
+
+            if (exerciseResponse == null || string.IsNullOrWhiteSpace(exerciseResponse.Exercise))
+            {
+                return StatusCode(500, new { message = "Failed to generate exercise from AI API." });
+            }
+
+            var exercise = new Exercise
+            {
+                ExerciseText = exerciseResponse.Exercise,
+                Difficulty = difficulty,
+                LessonId = lesson.Id
+            };
+
+            _dbContext.Exercises.Add(exercise);
+            await _dbContext.SaveChangesAsync();
+
+            _logger.LogInformation("Retry exercise generated and saved for Lesson {Id}", id);
+            return Ok(exercise);
+        }
+        catch (TimeoutException ex)
+        {
+            _logger.LogError(ex, "Timeout retrying exercise for Lesson {Id}", id);
+            return StatusCode(504, new { message = "The AI service is taking too long. Please try again." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrying exercise for Lesson {Id}", id);
+            return StatusCode(500, new { message = "An error occurred while generating the exercise.", error = ex.Message });
+        }
+    }
+
     [HttpPost("exercise/{exerciseId}/check")]
     public async Task<ActionResult<ExerciseAnswer>> CheckExerciseReview(int exerciseId, [FromBody] string answer)
     {

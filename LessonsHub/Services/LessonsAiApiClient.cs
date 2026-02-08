@@ -103,6 +103,35 @@ public class LessonsAiApiClient : ILessonsAiApiClient
         }
     }
 
+    public async Task<AiLessonExerciseResponse?> RetryLessonExerciseAsync(AiExerciseRetryRequest request)
+    {
+        try
+        {
+            _logger.LogInformation("Retrying exercise for lesson: {LessonName}", request.LessonName);
+
+            var response = await _httpClient.PostAsJsonAsync("/api/lesson-exercise/retry", request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                _logger.LogError("AI API Error: {StatusCode} - {Error}", response.StatusCode, error);
+                throw new HttpRequestException($"AI API Error: {response.StatusCode} - {error}");
+            }
+
+            return await response.Content.ReadFromJsonAsync<AiLessonExerciseResponse>();
+        }
+        catch (TaskCanceledException)
+        {
+            _logger.LogError("AI API request timed out for exercise retry: {LessonName}", request.LessonName);
+            throw new TimeoutException("The AI API request timed out. Please try again.");
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Failed to connect to AI API");
+            throw new Exception($"Failed to connect to AI API: {ex.Message}");
+        }
+    }
+
     public async Task<AiExerciseReviewResponse?> CheckExerciseReviewAsync(AiExerciseReviewRequest request)
     {
         try

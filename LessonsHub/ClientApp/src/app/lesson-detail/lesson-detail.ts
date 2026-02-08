@@ -1,19 +1,21 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewChildren, QueryList } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatExpansionModule } from '@angular/material/expansion';
+import { MatExpansionModule, MatExpansionPanel } from '@angular/material/expansion';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { FormsModule } from '@angular/forms';
 import { MarkdownModule } from 'ngx-markdown';
 import { LessonService } from '../services/lesson.service';
-import { Lesson, Exercise, DIFFICULTIES } from '../models/lesson.model';
+import { Lesson, Exercise } from '../models/lesson.model';
+import { GenerateExerciseDialog, GenerateExerciseDialogResult } from '../generate-exercise-dialog/generate-exercise-dialog';
 
 @Component({
   selector: 'app-lesson-detail',
@@ -30,6 +32,7 @@ import { Lesson, Exercise, DIFFICULTIES } from '../models/lesson.model';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatDialogModule,
     FormsModule,
     MarkdownModule
   ],
@@ -40,16 +43,15 @@ export class LessonDetail implements OnInit {
   lesson: Lesson | null = null;
   isLoading = true;
   error = '';
-  selectedDifficulty = 'Average';
-  difficulties = DIFFICULTIES;
-  exerciseComment = '';
   isGeneratingExercise = false;
   answerTexts: { [exerciseId: number]: string } = {};
   submittingExerciseId: number | null = null;
+  @ViewChildren(MatExpansionPanel) exercisePanels!: QueryList<MatExpansionPanel>;
 
   constructor(
     private route: ActivatedRoute,
     private lessonService: LessonService,
+    private dialog: MatDialog,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -79,17 +81,34 @@ export class LessonDetail implements OnInit {
     });
   }
 
-  generateExercise(): void {
+  openGenerateDialog(review?: string): void {
+    const dialogRef = this.dialog.open(GenerateExerciseDialog, {
+      width: '480px',
+      data: { review }
+    });
+
+    dialogRef.afterClosed().subscribe((result: GenerateExerciseDialogResult | null) => {
+      if (result) {
+        if (result.review) {
+          this.retryExercise(result);
+        } else {
+          this.generateExercise(result);
+        }
+      }
+    });
+  }
+
+  private generateExercise(params: GenerateExerciseDialogResult): void {
     if (!this.lesson) return;
 
     this.isGeneratingExercise = true;
-    const comment = this.exerciseComment.trim() || undefined;
-    this.lessonService.generateExercise(this.lesson.id, this.selectedDifficulty, comment).subscribe({
+    this.cdr.detectChanges();
+    this.lessonService.generateExercise(this.lesson.id, params.difficulty, params.comment).subscribe({
       next: (exercise) => {
         this.lesson!.exercises.push(exercise);
-        this.exerciseComment = '';
         this.isGeneratingExercise = false;
         this.cdr.detectChanges();
+        this.openNewPanel();
       },
       error: (err) => {
         console.error('Error generating exercise', err);
@@ -98,6 +117,34 @@ export class LessonDetail implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  private retryExercise(params: GenerateExerciseDialogResult): void {
+    if (!this.lesson || !params.review) return;
+
+    this.isGeneratingExercise = true;
+    this.cdr.detectChanges();
+    this.lessonService.retryExercise(this.lesson.id, params.difficulty, params.review, params.comment).subscribe({
+      next: (exercise) => {
+        this.lesson!.exercises.push(exercise);
+        this.isGeneratingExercise = false;
+        this.cdr.detectChanges();
+        this.openNewPanel();
+      },
+      error: (err) => {
+        console.error('Error retrying exercise', err);
+        this.error = 'Failed to generate exercise: ' + (err.error?.message || err.message);
+        this.isGeneratingExercise = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private openNewPanel(): void {
+    this.exercisePanels.forEach(p => p.close());
+    if (this.exercisePanels.last) {
+      this.exercisePanels.last.open();
+    }
   }
 
   submitAnswer(exercise: Exercise): void {

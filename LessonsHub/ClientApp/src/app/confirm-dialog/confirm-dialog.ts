@@ -29,19 +29,29 @@ export interface ConfirmDialogData {
     </mat-dialog-actions>
   `,
   styles: [`
+    :host ::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
+      border-radius: 16px;
+      padding: 0.5rem;
+    }
     .dialog-title {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.75rem;
       font-weight: 700;
+      margin-bottom: 0.25rem;
     }
     .warning-icon {
       color: #ef4444;
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
     }
     .dialog-message {
       color: #64748b;
       line-height: 1.6;
       margin: 0;
+      padding-top: 0.5rem;
+      font-size: 0.95rem;
     }
   `]
 })
