@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+**/bin
+**/obj
+**/.git
+**/.vs
+**/.vscode
+**/.idea
+**/Migrations
+*.md
+.gitignore
+.editorconfig

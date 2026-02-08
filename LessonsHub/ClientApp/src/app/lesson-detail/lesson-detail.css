@@ -49,6 +49,17 @@
   margin: 0 0 1rem 0;
 }
 
+.lesson-topic {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6d63c2;
+  background: #ede9fe;
+  padding: 3px 10px;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+}
+
 .lesson-lead {
   font-size: 1.25rem;
   color: #64748b;

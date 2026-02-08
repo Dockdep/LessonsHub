@@ -191,8 +191,23 @@ public class LessonDayController : ControllerBase
                 return NotFound(new { message = "Lesson not found." });
             }
 
+            var dayId = lesson.LessonDayId;
             lesson.LessonDayId = null;
             await _dbContext.SaveChangesAsync();
+
+            // Remove the lesson day if it has no lessons left
+            if (dayId != null)
+            {
+                var day = await _dbContext.LessonDays
+                    .Include(ld => ld.Lessons)
+                    .FirstOrDefaultAsync(ld => ld.Id == dayId);
+
+                if (day != null && day.Lessons.Count == 0)
+                {
+                    _dbContext.LessonDays.Remove(day);
+                    await _dbContext.SaveChangesAsync();
+                }
+            }
 
             return Ok(new { message = "Lesson unassigned successfully." });
         }

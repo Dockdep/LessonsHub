@@ -59,7 +59,7 @@ public class LessonsHubDbContext : DbContext
             entity.Property(e => e.LessonTopic).HasMaxLength(200);
             var keyPointsConverter = new ValueConverter<List<string>, string>(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>()
+                v => string.IsNullOrEmpty(v) ? new List<string>() : JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>()
             );
             var keyPointsComparer = new ValueComparer<List<string>>(
                 (c1, c2) => c1!.SequenceEqual(c2!),

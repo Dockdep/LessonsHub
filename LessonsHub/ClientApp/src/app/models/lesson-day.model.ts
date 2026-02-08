@@ -40,3 +40,21 @@ export interface AssignLessonRequest {
   dayName: string;
   dayDescription: string;
 }
+
+export interface LessonPlanDetail {
+  id: number;
+  name: string;
+  topic: string;
+  description: string;
+  nativeLanguage?: string;
+  createdDate: string;
+  lessons: PlanLesson[];
+}
+
+export interface PlanLesson {
+  id: number;
+  lessonNumber: number;
+  name: string;
+  shortDescription: string;
+  lessonTopic: string;
+}

@@ -39,3 +39,23 @@ public class AvailableLessonDto
     public string LessonPlanName { get; set; } = string.Empty;
     public bool IsAssigned { get; set; }
 }
+
+public class LessonPlanDetailDto
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Topic { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string? NativeLanguage { get; set; }
+    public DateTime CreatedDate { get; set; }
+    public List<PlanLessonDto> Lessons { get; set; } = new();
+}
+
+public class PlanLessonDto
+{
+    public int Id { get; set; }
+    public int LessonNumber { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string ShortDescription { get; set; } = string.Empty;
+    public string LessonTopic { get; set; } = string.Empty;
+}

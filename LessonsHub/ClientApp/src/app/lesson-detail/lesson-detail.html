@@ -20,6 +20,7 @@
       <header class="lesson-hero">
         <div class="hero-badge">Lesson {{ lesson.lessonNumber }}</div>
         <h1 class="lesson-heading">{{ lesson.name }}</h1>
+        <span class="lesson-topic" *ngIf="lesson.lessonTopic">{{ lesson.lessonTopic }}</span>
         <p class="lesson-lead">{{ lesson.shortDescription }}</p>
       </header>
       

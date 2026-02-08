@@ -4,6 +4,7 @@ using LessonsHub.Interfaces;
 using LessonsHub.Models.Requests;
 using LessonsHub.Models.Responses;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace LessonsHub.Controllers;
 
@@ -23,6 +24,97 @@ public class LessonPlanController : ControllerBase
         _aiApiClient = aiApiClient;
         _dbContext = dbContext;
         _logger = logger;
+    }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<LessonPlanDetailDto>> GetLessonPlanDetail(int id)
+    {
+        try
+        {
+            var lessonPlan = await _dbContext.LessonPlans
+                .Include(lp => lp.Lessons)
+                .FirstOrDefaultAsync(lp => lp.Id == id);
+
+            if (lessonPlan == null)
+            {
+                return NotFound(new { message = "Lesson plan not found." });
+            }
+
+            var detail = new LessonPlanDetailDto
+            {
+                Id = lessonPlan.Id,
+                Name = lessonPlan.Name,
+                Topic = lessonPlan.Topic,
+                Description = lessonPlan.Description,
+                NativeLanguage = lessonPlan.NativeLanguage,
+                CreatedDate = lessonPlan.CreatedDate,
+                Lessons = lessonPlan.Lessons
+                    .OrderBy(l => l.LessonNumber)
+                    .Select(l => new PlanLessonDto
+                    {
+                        Id = l.Id,
+                        LessonNumber = l.LessonNumber,
+                        Name = l.Name,
+                        ShortDescription = l.ShortDescription,
+                        LessonTopic = l.LessonTopic
+                    })
+                    .ToList()
+            };
+
+            return Ok(detail);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving lesson plan detail");
+            return StatusCode(500, new { message = "An error occurred while retrieving the lesson plan." });
+        }
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> DeleteLessonPlan(int id)
+    {
+        try
+        {
+            var lessonPlan = await _dbContext.LessonPlans
+                .Include(lp => lp.Lessons)
+                .FirstOrDefaultAsync(lp => lp.Id == id);
+
+            if (lessonPlan == null)
+            {
+                return NotFound(new { message = "Lesson plan not found." });
+            }
+
+            // Collect lesson day IDs before deletion
+            var affectedDayIds = lessonPlan.Lessons
+                .Where(l => l.LessonDayId != null)
+                .Select(l => l.LessonDayId!.Value)
+                .Distinct()
+                .ToList();
+
+            _dbContext.LessonPlans.Remove(lessonPlan);
+            await _dbContext.SaveChangesAsync();
+
+            // Remove lesson days that have no lessons left
+            if (affectedDayIds.Count > 0)
+            {
+                var emptyDays = await _dbContext.LessonDays
+                    .Where(ld => affectedDayIds.Contains(ld.Id) && !ld.Lessons.Any())
+                    .ToListAsync();
+
+                if (emptyDays.Count > 0)
+                {
+                    _dbContext.LessonDays.RemoveRange(emptyDays);
+                    await _dbContext.SaveChangesAsync();
+                }
+            }
+
+            return Ok(new { message = "Lesson plan deleted successfully." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting lesson plan");
+            return StatusCode(500, new { message = "An error occurred while deleting the lesson plan." });
+        }
     }
 
     [HttpPost("generate")]
