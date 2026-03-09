@@ -7,6 +7,8 @@ export interface Lesson {
   lessonType: string;
   lessonTopic: string;
   keyPoints: string[];
+  isCompleted: boolean;
+  completedAt?: string;
   lessonPlanId: number;
   lessonDayId?: number;
   exercises: Exercise[];

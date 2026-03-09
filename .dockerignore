@@ -6,7 +6,6 @@
 **/.vs
 **/.vscode
 **/.idea
-**/Migrations
 *.md
 .gitignore
 .editorconfig

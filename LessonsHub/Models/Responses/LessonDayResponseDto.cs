@@ -17,6 +17,7 @@ public class AssignedLessonDto
     public string ShortDescription { get; set; } = string.Empty;
     public int LessonPlanId { get; set; }
     public string LessonPlanName { get; set; } = string.Empty;
+    public bool IsCompleted { get; set; }
 }
 
 public class LessonPlanSummaryDto
@@ -58,4 +59,5 @@ public class PlanLessonDto
     public string Name { get; set; } = string.Empty;
     public string ShortDescription { get; set; } = string.Empty;
     public string LessonTopic { get; set; } = string.Empty;
+    public bool IsCompleted { get; set; }
 }

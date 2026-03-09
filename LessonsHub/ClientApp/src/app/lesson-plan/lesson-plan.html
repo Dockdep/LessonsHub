@@ -22,9 +22,9 @@
             <input matInput [(ngModel)]="planName" placeholder="e.g. Intro to Python" required>
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width" *ngIf="lessonType === 'Language'">
-            <mat-label>Native Language</mat-label>
-            <input matInput [(ngModel)]="nativeLanguage" placeholder="e.g. Ukrainian, Spanish">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Language</mat-label>
+            <input matInput [(ngModel)]="nativeLanguage" placeholder="e.g. English, Ukrainian">
           </mat-form-field>
         </div>
 

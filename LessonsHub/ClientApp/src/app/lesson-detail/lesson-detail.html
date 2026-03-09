@@ -1,9 +1,9 @@
 <div class="lesson-viewer fade-in">
   <!-- Top Nav -->
-  <div class="nav-back">
-    <button mat-button routerLink="/today">
-      <mat-icon>arrow_back</mat-icon> Back to Dashboard
-    </button>
+  <div class="nav-back" *ngIf="lesson">
+    <a mat-button [routerLink]="['/lesson-plans', lesson.lessonPlanId]">
+      <mat-icon>arrow_back</mat-icon> Back to Lesson Plan
+    </a>
   </div>
 
   <div class="loading-overlay" *ngIf="isLoading">
@@ -18,7 +18,12 @@
     <!-- Main Content Column -->
     <article class="content-column">
       <header class="lesson-hero">
-        <div class="hero-badge">Lesson {{ lesson.lessonNumber }}</div>
+        <div class="hero-top-row">
+          <div class="hero-badge">Lesson {{ lesson.lessonNumber }}</div>
+          <span class="completed-badge" *ngIf="lesson.isCompleted">
+            <mat-icon>check_circle</mat-icon> Completed
+          </span>
+        </div>
         <h1 class="lesson-heading">{{ lesson.name }}</h1>
         <span class="lesson-topic" *ngIf="lesson.lessonTopic">{{ lesson.lessonTopic }}</span>
         <p class="lesson-lead">{{ lesson.shortDescription }}</p>
@@ -69,13 +74,7 @@
                     <div class="feedback-history" *ngIf="exercise.answers && exercise.answers.length > 0">
                       <div class="history-header">
                         <span class="history-label">Previous Attempts</span>
-                        <button mat-stroked-button class="retry-btn"
-                          (click)="openGenerateDialog(exercise.answers[exercise.answers.length - 1].reviewText)"
-                          [disabled]="isGeneratingExercise"
-                          *ngIf="exercise.answers[exercise.answers.length - 1].reviewText">
-                          <mat-icon>replay</mat-icon>
-                          Generate Task Based on Review
-                        </button>
+                
                       </div>
                       <div class="attempt-card" *ngFor="let answer of exercise.answers">
                         <div class="attempt-meta">
@@ -90,6 +89,15 @@
                         <p class="user-response">"{{ answer.userResponse }}"</p>
                         <div class="ai-review" *ngIf="answer.reviewText">
                           <markdown [data]="answer.reviewText"></markdown>
+                        </div>
+                        <div>
+                            <button mat-stroked-button class="retry-btn"
+                              (click)="openGenerateDialog(exercise.answers[exercise.answers.length - 1].reviewText)"
+                              [disabled]="isGeneratingExercise"
+                              *ngIf="exercise.answers[exercise.answers.length - 1].reviewText">
+                              <mat-icon>replay</mat-icon>
+                              Generate Task Based on Review
+                            </button>
                         </div>
                       </div>
                     </div>
@@ -115,6 +123,29 @@
           </mat-card-content>
         </mat-card>
       </section>
+
+      <!-- Complete Lesson -->
+      <div class="complete-section">
+        <button mat-raised-button
+          [class]="lesson.isCompleted ? 'complete-btn completed' : 'complete-btn'"
+          (click)="toggleComplete()"
+          [disabled]="isTogglingComplete">
+          <mat-icon>{{ lesson.isCompleted ? 'check_circle' : 'check_circle_outline' }}</mat-icon>
+          {{ lesson.isCompleted ? 'Completed' : 'Mark as Complete' }}
+        </button>
+      </div>
+
+      <!-- Navigation -->
+      <div class="lesson-nav">
+        <a mat-stroked-button class="nav-btn prev-btn" *ngIf="prevLessonId" [routerLink]="['/lesson', prevLessonId]">
+          <mat-icon>arrow_back</mat-icon>
+          Previous Lesson
+        </a>
+        <a mat-raised-button class="nav-btn next-btn" *ngIf="nextLessonId" [routerLink]="['/lesson', nextLessonId]">
+          Next Lesson
+          <mat-icon>arrow_forward</mat-icon>
+        </a>
+      </div>
     </article>
   </div>
 </div>

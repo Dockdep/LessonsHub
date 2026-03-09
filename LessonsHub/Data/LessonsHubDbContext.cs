@@ -13,6 +13,7 @@ public class LessonsHubDbContext : DbContext
     {
     }
 
+    public DbSet<User> Users { get; set; }
     public DbSet<LessonDay> LessonDays { get; set; }
     public DbSet<LessonPlan> LessonPlans { get; set; }
     public DbSet<Lesson> Lessons { get; set; }
@@ -26,6 +27,18 @@ public class LessonsHubDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // User configuration
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.GoogleId).IsRequired().HasMaxLength(255);
+            entity.HasIndex(e => e.GoogleId).IsUnique();
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.PictureUrl).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).IsRequired();
+        });
 
         // LessonDay configuration
         modelBuilder.Entity<LessonDay>(entity =>
@@ -42,9 +55,14 @@ public class LessonsHubDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Topic).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.Description);
             entity.Property(e => e.NativeLanguage).HasMaxLength(100);
             entity.Property(e => e.CreatedDate).IsRequired();
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.LessonPlans)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired(false);
         });
 
         // Lesson configuration
@@ -69,6 +87,9 @@ public class LessonsHubDbContext : DbContext
             entity.Property(e => e.KeyPoints)
                 .HasConversion(keyPointsConverter)
                 .Metadata.SetValueComparer(keyPointsComparer);
+
+            entity.Property(e => e.IsCompleted).HasDefaultValue(false);
+            entity.Property(e => e.CompletedAt);
 
             // Relationship with LessonPlan
             entity.HasOne(e => e.LessonPlan)

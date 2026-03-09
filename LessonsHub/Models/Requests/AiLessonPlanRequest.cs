@@ -18,4 +18,7 @@ public class AiLessonPlanRequest
 
     [JsonPropertyName("description")]
     public string? Description { get; set; }
+
+    [JsonPropertyName("language")]
+    public string? Language { get; set; }
 }

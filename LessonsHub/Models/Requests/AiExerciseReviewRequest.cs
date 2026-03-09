@@ -18,4 +18,7 @@ public class AiExerciseReviewRequest
 
     [JsonPropertyName("answer")]
     public string Answer { get; set; } = string.Empty;
+
+    [JsonPropertyName("language")]
+    public string? Language { get; set; }
 }

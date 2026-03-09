@@ -10,6 +10,8 @@ public class Lesson
     public string LessonType { get; set; } = string.Empty;
     public string LessonTopic { get; set; } = string.Empty;
     public List<string> KeyPoints { get; set; } = new();
+    public bool IsCompleted { get; set; } = false;
+    public DateTime? CompletedAt { get; set; }
 
     // Relationships
     public int LessonPlanId { get; set; }

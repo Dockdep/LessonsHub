@@ -36,4 +36,12 @@ export class LessonService {
       headers: { 'Content-Type': 'application/json' }
     });
   }
+
+  completeLesson(lessonId: number): Observable<Lesson> {
+    return this.http.patch<Lesson>(`${this.apiUrl}/${lessonId}/complete`, {});
+  }
+
+  getSiblingLessonIds(lessonId: number): Observable<{ prevLessonId: number | null, nextLessonId: number | null }> {
+    return this.http.get<{ prevLessonId: number | null, nextLessonId: number | null }>(`${this.apiUrl}/${lessonId}/siblings`);
+  }
 }

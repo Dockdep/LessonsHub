@@ -3,13 +3,16 @@ using LessonsHub.Entities;
 using LessonsHub.Interfaces;
 using LessonsHub.Models.Requests;
 using LessonsHub.Models.Responses;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace LessonsHub.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class LessonPlanController : ControllerBase
 {
     private readonly ILessonsAiApiClient _aiApiClient;
@@ -26,19 +29,21 @@ public class LessonPlanController : ControllerBase
         _logger = logger;
     }
 
+    private int GetCurrentUserId() =>
+        int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
     [HttpGet("{id}")]
     public async Task<ActionResult<LessonPlanDetailDto>> GetLessonPlanDetail(int id)
     {
         try
         {
+            var userId = GetCurrentUserId();
             var lessonPlan = await _dbContext.LessonPlans
                 .Include(lp => lp.Lessons)
-                .FirstOrDefaultAsync(lp => lp.Id == id);
+                .FirstOrDefaultAsync(lp => lp.Id == id && lp.UserId == userId);
 
             if (lessonPlan == null)
-            {
                 return NotFound(new { message = "Lesson plan not found." });
-            }
 
             var detail = new LessonPlanDetailDto
             {
@@ -56,7 +61,8 @@ public class LessonPlanController : ControllerBase
                         LessonNumber = l.LessonNumber,
                         Name = l.Name,
                         ShortDescription = l.ShortDescription,
-                        LessonTopic = l.LessonTopic
+                        LessonTopic = l.LessonTopic,
+                        IsCompleted = l.IsCompleted
                     })
                     .ToList()
             };
@@ -75,16 +81,14 @@ public class LessonPlanController : ControllerBase
     {
         try
         {
+            var userId = GetCurrentUserId();
             var lessonPlan = await _dbContext.LessonPlans
                 .Include(lp => lp.Lessons)
-                .FirstOrDefaultAsync(lp => lp.Id == id);
+                .FirstOrDefaultAsync(lp => lp.Id == id && lp.UserId == userId);
 
             if (lessonPlan == null)
-            {
                 return NotFound(new { message = "Lesson plan not found." });
-            }
 
-            // Collect lesson day IDs before deletion
             var affectedDayIds = lessonPlan.Lessons
                 .Where(l => l.LessonDayId != null)
                 .Select(l => l.LessonDayId!.Value)
@@ -94,7 +98,6 @@ public class LessonPlanController : ControllerBase
             _dbContext.LessonPlans.Remove(lessonPlan);
             await _dbContext.SaveChangesAsync();
 
-            // Remove lesson days that have no lessons left
             if (affectedDayIds.Count > 0)
             {
                 var emptyDays = await _dbContext.LessonDays
@@ -128,24 +131,21 @@ public class LessonPlanController : ControllerBase
                 return BadRequest(new { message = "Invalid input. Please provide plan name and topic." });
             }
 
-            // Call the AI API
             var aiRequest = new AiLessonPlanRequest
             {
                 LessonType = request.LessonType,
                 PlanName = request.PlanName,
                 Topic = request.Topic,
                 NumberOfLessons = request.NumberOfDays,
-                Description = request.Description
+                Description = request.Description,
+                Language = request.NativeLanguage
             };
 
             var aiResponse = await _aiApiClient.GenerateLessonPlanAsync(aiRequest);
 
             if (aiResponse == null)
-            {
                 return StatusCode(500, new { message = "Failed to get lesson plan from AI API." });
-            }
 
-            // Map AI response to our DTO
             var lessonPlan = new LessonPlanResponseDto
             {
                 PlanName = aiResponse.PlanName,
@@ -179,25 +179,24 @@ public class LessonPlanController : ControllerBase
     {
         try
         {
-            if (request == null || request.LessonPlan == null || request.LessonPlan.Lessons == null || !request.LessonPlan.Lessons.Any())
-            {
+            if (request?.LessonPlan?.Lessons == null || !request.LessonPlan.Lessons.Any())
                 return BadRequest(new { message = "Invalid lesson plan data." });
-            }
 
-            // Create LessonPlan
+            var userId = GetCurrentUserId();
+
             var lessonPlan = new LessonPlan
             {
                 Name = request.LessonPlan.PlanName,
                 Topic = request.LessonPlan.Topic,
                 Description = request.Description ?? string.Empty,
                 NativeLanguage = request.NativeLanguage,
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.UtcNow,
+                UserId = userId
             };
 
             _dbContext.LessonPlans.Add(lessonPlan);
             await _dbContext.SaveChangesAsync();
 
-            // Create Lessons
             foreach (var lessonDto in request.LessonPlan.Lessons)
             {
                 var lesson = new Lesson
@@ -212,7 +211,6 @@ public class LessonPlanController : ControllerBase
                     KeyPoints = lessonDto.KeyPoints ?? new(),
                     LessonDayId = null
                 };
-
                 _dbContext.Lessons.Add(lesson);
             }
 

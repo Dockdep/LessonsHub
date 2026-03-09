@@ -8,4 +8,5 @@ public class LessonPlanRequestDto
     public int? NumberOfDays { get; set; }
     public string Topic { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public string? NativeLanguage { get; set; }
 }

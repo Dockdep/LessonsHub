@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef, ViewChildren, QueryList } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -44,25 +44,38 @@ export class LessonDetail implements OnInit {
   isLoading = true;
   error = '';
   isGeneratingExercise = false;
+  isTogglingComplete = false;
+  prevLessonId: number | null = null;
+  nextLessonId: number | null = null;
   answerTexts: { [exerciseId: number]: string } = {};
   submittingExerciseId: number | null = null;
   @ViewChildren(MatExpansionPanel) exercisePanels!: QueryList<MatExpansionPanel>;
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private lessonService: LessonService,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    const lessonId = Number(this.route.snapshot.paramMap.get('id'));
-    if (lessonId) {
-      this.loadLesson(lessonId);
-    } else {
-      this.error = 'Invalid Lesson ID';
-      this.isLoading = false;
-    }
+    this.route.paramMap.subscribe(params => {
+      const lessonId = Number(params.get('id'));
+      if (lessonId) {
+        this.isLoading = true;
+        this.lesson = null;
+        this.prevLessonId = null;
+        this.nextLessonId = null;
+        this.error = '';
+        this.answerTexts = {};
+        window.scrollTo({ top: 0 });
+        this.loadLesson(lessonId);
+      } else {
+        this.error = 'Invalid Lesson ID';
+        this.isLoading = false;
+      }
+    });
   }
 
   loadLesson(id: number): void {
@@ -71,6 +84,13 @@ export class LessonDetail implements OnInit {
         this.lesson = data;
         this.isLoading = false;
         this.cdr.detectChanges();
+        this.lessonService.getSiblingLessonIds(id).subscribe({
+          next: (res) => {
+            this.prevLessonId = res.prevLessonId;
+            this.nextLessonId = res.nextLessonId;
+            this.cdr.detectChanges();
+          }
+        });
       },
       error: (err) => {
         console.error('Error loading lesson', err);
@@ -163,6 +183,26 @@ export class LessonDetail implements OnInit {
         console.error('Error submitting answer', err);
         this.error = 'Failed to submit answer: ' + (err.error?.message || err.message);
         this.submittingExerciseId = null;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  toggleComplete(): void {
+    if (!this.lesson) return;
+
+    this.isTogglingComplete = true;
+    this.lessonService.completeLesson(this.lesson.id).subscribe({
+      next: (updated) => {
+        this.lesson!.isCompleted = updated.isCompleted;
+        this.lesson!.completedAt = updated.completedAt;
+        this.isTogglingComplete = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error toggling lesson completion', err);
+        this.error = 'Failed to update lesson status.';
+        this.isTogglingComplete = false;
         this.cdr.detectChanges();
       }
     });

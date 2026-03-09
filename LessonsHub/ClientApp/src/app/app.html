@@ -1,3 +1,6 @@
+@if (!auth.isLoggedIn()) {
+  <router-outlet></router-outlet>
+} @else {
 <div class="app-layout">
   <!-- Sidebar Navigation -->
   <nav class="sidebar">
@@ -27,13 +30,19 @@
       </a>
     </div>
 
-    <div class="user-profile">
-      <div class="avatar">JD</div>
-      <div class="user-info">
-        <span class="name">John Doe</span>
-        <span class="role">Student</span>
+    @if (auth.currentUser(); as user) {
+      <div class="user-profile">
+        @if (user.pictureUrl) {
+          <img [src]="user.pictureUrl" class="avatar-img" alt="avatar" referrerpolicy="no-referrer">
+        } @else {
+          <div class="avatar">{{ user.name.charAt(0).toUpperCase() }}</div>
+        }
+        <div class="user-info">
+          <span class="name">{{ user.name }}</span>
+          <button class="logout-link" (click)="auth.logout()">Sign out</button>
+        </div>
       </div>
-    </div>
+    }
   </nav>
 
   <!-- Main Content -->
@@ -53,3 +62,4 @@
     </div>
   </main>
 </div>
+}

@@ -9,6 +9,8 @@ public class LessonPlan
     public string? NativeLanguage { get; set; }
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
-    // One LessonPlan can have multiple Lessons
+    public int? UserId { get; set; }
+    public User? User { get; set; }
+
     public List<Lesson> Lessons { get; set; } = new();
 }

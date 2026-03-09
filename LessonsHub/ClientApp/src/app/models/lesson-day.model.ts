@@ -13,6 +13,7 @@ export interface AssignedLesson {
   shortDescription: string;
   lessonPlanId: number;
   lessonPlanName: string;
+  isCompleted: boolean;
 }
 
 export interface LessonPlanSummary {
@@ -57,4 +58,5 @@ export interface PlanLesson {
   name: string;
   shortDescription: string;
   lessonTopic: string;
+  isCompleted: boolean;
 }

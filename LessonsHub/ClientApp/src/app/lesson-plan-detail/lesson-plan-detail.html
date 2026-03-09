@@ -40,8 +40,11 @@
     <h2 class="section-title">Lessons</h2>
 
     <div class="lessons-list" *ngIf="plan.lessons.length > 0">
-      <a class="lesson-card" *ngFor="let lesson of plan.lessons" [routerLink]="['/lesson', lesson.id]">
-        <div class="lesson-num">{{ lesson.lessonNumber }}</div>
+      <a class="lesson-card" [class.completed]="lesson.isCompleted" *ngFor="let lesson of plan.lessons" [routerLink]="['/lesson', lesson.id]">
+        <div class="lesson-num" [class.completed]="lesson.isCompleted">
+          <mat-icon *ngIf="lesson.isCompleted" class="check-icon">check</mat-icon>
+          <span *ngIf="!lesson.isCompleted">{{ lesson.lessonNumber }}</span>
+        </div>
         <div class="lesson-info">
           <h3 class="lesson-name">{{ lesson.name }}</h3>
           <span class="lesson-topic" *ngIf="lesson.lessonTopic">{{ lesson.lessonTopic }}</span>

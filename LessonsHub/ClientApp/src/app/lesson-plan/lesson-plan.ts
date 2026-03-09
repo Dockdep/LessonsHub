@@ -63,7 +63,8 @@ export class LessonPlan {
       planName: this.planName,
       numberOfDays: this.numberOfDays,
       topic: this.topic,
-      description: this.description
+      description: this.description,
+      nativeLanguage: this.nativeLanguage || undefined
     };
 
     this.lessonPlanService.generateLessonPlan(request).subscribe({

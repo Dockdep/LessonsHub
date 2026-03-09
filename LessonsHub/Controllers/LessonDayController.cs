@@ -2,13 +2,16 @@ using LessonsHub.Data;
 using LessonsHub.Entities;
 using LessonsHub.Models.Requests;
 using LessonsHub.Models.Responses;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace LessonsHub.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class LessonDayController : ControllerBase
 {
     private readonly LessonsHubDbContext _dbContext;
@@ -20,13 +23,18 @@ public class LessonDayController : ControllerBase
         _logger = logger;
     }
 
+    private int GetCurrentUserId() =>
+        int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
     [HttpGet("plans")]
     public async Task<ActionResult<List<LessonPlanSummaryDto>>> GetLessonPlans()
     {
         try
         {
+            var userId = GetCurrentUserId();
             var plans = await _dbContext.LessonPlans
                 .Include(lp => lp.Lessons)
+                .Where(lp => lp.UserId == userId)
                 .Select(lp => new LessonPlanSummaryDto
                 {
                     Id = lp.Id,
@@ -53,14 +61,13 @@ public class LessonDayController : ControllerBase
     {
         try
         {
+            var userId = GetCurrentUserId();
             var lessonPlan = await _dbContext.LessonPlans
                 .Include(lp => lp.Lessons)
-                .FirstOrDefaultAsync(lp => lp.Id == lessonPlanId);
+                .FirstOrDefaultAsync(lp => lp.Id == lessonPlanId && lp.UserId == userId);
 
             if (lessonPlan == null)
-            {
                 return NotFound(new { message = "Lesson plan not found." });
-            }
 
             var lessons = lessonPlan.Lessons
                 .OrderBy(l => l.LessonNumber)
@@ -90,13 +97,15 @@ public class LessonDayController : ControllerBase
     {
         try
         {
+            var userId = GetCurrentUserId();
             var startDate = DateTime.SpecifyKind(new DateTime(year, month, 1), DateTimeKind.Utc);
             var endDate = startDate.AddMonths(1);
 
             var lessonDays = await _dbContext.LessonDays
                 .Include(ld => ld.Lessons)
                     .ThenInclude(l => l.LessonPlan)
-                .Where(ld => ld.Date >= startDate && ld.Date < endDate)
+                .Where(ld => ld.Date >= startDate && ld.Date < endDate &&
+                             ld.Lessons.Any(l => l.LessonPlan.UserId == userId))
                 .OrderBy(ld => ld.Date)
                 .Select(ld => new LessonDayDto
                 {
@@ -104,15 +113,18 @@ public class LessonDayController : ControllerBase
                     Date = ld.Date,
                     Name = ld.Name,
                     ShortDescription = ld.ShortDescription,
-                    Lessons = ld.Lessons.Select(l => new AssignedLessonDto
-                    {
-                        Id = l.Id,
-                        LessonNumber = l.LessonNumber,
-                        Name = l.Name,
-                        ShortDescription = l.ShortDescription,
-                        LessonPlanId = l.LessonPlanId,
-                        LessonPlanName = l.LessonPlan.Name
-                    }).ToList()
+                    Lessons = ld.Lessons
+                        .Where(l => l.LessonPlan.UserId == userId)
+                        .Select(l => new AssignedLessonDto
+                        {
+                            Id = l.Id,
+                            LessonNumber = l.LessonNumber,
+                            Name = l.Name,
+                            ShortDescription = l.ShortDescription,
+                            LessonPlanId = l.LessonPlanId,
+                            LessonPlanName = l.LessonPlan.Name,
+                            IsCompleted = l.IsCompleted
+                        }).ToList()
                 })
                 .ToListAsync();
 
@@ -130,27 +142,24 @@ public class LessonDayController : ControllerBase
     {
         try
         {
-            var lesson = await _dbContext.Lessons.FindAsync(request.LessonId);
-            if (lesson == null)
-            {
+            var userId = GetCurrentUserId();
+            var lesson = await _dbContext.Lessons
+                .Include(l => l.LessonPlan)
+                .FirstOrDefaultAsync(l => l.Id == request.LessonId);
+
+            if (lesson == null || lesson.LessonPlan?.UserId != userId)
                 return NotFound(new { message = "Lesson not found." });
-            }
 
             if (!DateTime.TryParse(request.Date, out var date))
-            {
                 return BadRequest(new { message = "Invalid date format." });
-            }
 
-            // Ensure DateTime is in UTC for PostgreSQL
             var utcDate = DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
 
-            // Check if a lesson day exists for this date
             var lessonDay = await _dbContext.LessonDays
                 .FirstOrDefaultAsync(ld => ld.Date.Date == utcDate.Date);
 
             if (lessonDay == null)
             {
-                // Create new lesson day
                 lessonDay = new LessonDay
                 {
                     Date = utcDate,
@@ -161,13 +170,11 @@ public class LessonDayController : ControllerBase
             }
             else
             {
-                // Update existing lesson day's name and description
                 lessonDay.Name = request.DayName;
                 lessonDay.ShortDescription = request.DayDescription;
             }
             await _dbContext.SaveChangesAsync();
 
-            // Assign lesson to the day
             lesson.LessonDayId = lessonDay.Id;
             await _dbContext.SaveChangesAsync();
 
@@ -185,17 +192,18 @@ public class LessonDayController : ControllerBase
     {
         try
         {
-            var lesson = await _dbContext.Lessons.FindAsync(lessonId);
-            if (lesson == null)
-            {
+            var userId = GetCurrentUserId();
+            var lesson = await _dbContext.Lessons
+                .Include(l => l.LessonPlan)
+                .FirstOrDefaultAsync(l => l.Id == lessonId);
+
+            if (lesson == null || lesson.LessonPlan?.UserId != userId)
                 return NotFound(new { message = "Lesson not found." });
-            }
 
             var dayId = lesson.LessonDayId;
             lesson.LessonDayId = null;
             await _dbContext.SaveChangesAsync();
 
-            // Remove the lesson day if it has no lessons left
             if (dayId != null)
             {
                 var day = await _dbContext.LessonDays
@@ -223,37 +231,35 @@ public class LessonDayController : ControllerBase
     {
         try
         {
-            // Normalize to UTC Start and End of the requested day
+            var userId = GetCurrentUserId();
             var searchDate = DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
             var nextDay = searchDate.AddDays(1);
 
             var lessonDay = await _dbContext.LessonDays
                 .Include(ld => ld.Lessons)
                     .ThenInclude(l => l.LessonPlan)
-                .Where(ld => ld.Date >= searchDate && ld.Date < nextDay)
+                .Where(ld => ld.Date >= searchDate && ld.Date < nextDay &&
+                             ld.Lessons.Any(l => l.LessonPlan.UserId == userId))
                 .Select(ld => new LessonDayDto
                 {
                     Id = ld.Id,
                     Date = ld.Date,
                     Name = ld.Name,
                     ShortDescription = ld.ShortDescription,
-                    Lessons = ld.Lessons.Select(l => new AssignedLessonDto
-                    {
-                        Id = l.Id,
-                        LessonNumber = l.LessonNumber,
-                        Name = l.Name,
-                        ShortDescription = l.ShortDescription,
-                        LessonPlanId = l.LessonPlanId,
-                        LessonPlanName = l.LessonPlan.Name
-                    }).ToList()
+                    Lessons = ld.Lessons
+                        .Where(l => l.LessonPlan.UserId == userId)
+                        .Select(l => new AssignedLessonDto
+                        {
+                            Id = l.Id,
+                            LessonNumber = l.LessonNumber,
+                            Name = l.Name,
+                            ShortDescription = l.ShortDescription,
+                            LessonPlanId = l.LessonPlanId,
+                            LessonPlanName = l.LessonPlan.Name,
+                            IsCompleted = l.IsCompleted
+                        }).ToList()
                 })
                 .FirstOrDefaultAsync();
-
-            if (lessonDay == null)
-            {
-                // Return 200 with null or empty object to handle "No lessons" gracefully on frontend
-                return Ok(null);
-            }
 
             return Ok(lessonDay);
         }
