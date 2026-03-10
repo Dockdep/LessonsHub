@@ -4,6 +4,8 @@
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 1rem;
+  box-sizing: border-box;
 }
 
 .login-card {
@@ -12,7 +14,9 @@
   padding: 3rem 2.5rem;
   text-align: center;
   box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-  width: 360px;
+  width: 100%;
+  max-width: 380px;
+  box-sizing: border-box;
 }
 
 .logo mat-icon {
@@ -35,15 +39,24 @@ h1 {
   margin-bottom: 2rem;
 }
 
-#google-btn {
+.google-btn-container {
   display: flex;
   justify-content: center;
+  min-height: 44px;
+}
+
+.google-btn-container.hidden {
+  display: none !important;
 }
 
 .loading {
   color: #64748b;
   font-size: 0.9rem;
   padding: 0.75rem;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .error {

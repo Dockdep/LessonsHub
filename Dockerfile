@@ -1,5 +1,6 @@
 # Stage 1: Build Angular
 FROM node:20-alpine AS node-build
+RUN npm install -g npm@11.6.2
 WORKDIR /src/ClientApp
 COPY LessonsHub/ClientApp/package.json LessonsHub/ClientApp/package-lock.json ./
 RUN npm ci
@@ -17,9 +18,15 @@ RUN echo '#!/bin/sh' > /usr/local/bin/npm && \
     chmod +x /usr/local/bin/npm
 
 COPY LessonsHub/LessonsHub.csproj LessonsHub/
+COPY LessonsHub.Application/LessonsHub.Application.csproj LessonsHub.Application/
+COPY LessonsHub.Infrastructure/LessonsHub.Infrastructure.csproj LessonsHub.Infrastructure/
+COPY LessonsHub.Domain/LessonsHub.Domain.csproj LessonsHub.Domain/
 RUN dotnet restore LessonsHub/LessonsHub.csproj
 
 COPY LessonsHub/ LessonsHub/
+COPY LessonsHub.Application/ LessonsHub.Application/
+COPY LessonsHub.Infrastructure/ LessonsHub.Infrastructure/
+COPY LessonsHub.Domain/ LessonsHub.Domain/
 
 # Copy pre-built Angular output
 COPY --from=node-build /src/ClientApp/dist LessonsHub/ClientApp/dist

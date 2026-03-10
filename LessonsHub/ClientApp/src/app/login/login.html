@@ -8,9 +8,9 @@
 
     @if (loading) {
       <div class="loading">Signing in...</div>
-    } @else {
-      <div id="google-btn"></div>
     }
+    
+    <div #googleBtn class="google-btn-container" [class.hidden]="loading"></div>
 
     @if (error) {
       <p class="error">{{ error }}</p>

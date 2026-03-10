@@ -1,7 +1,7 @@
-using LessonsHub.Data;
-using LessonsHub.Entities;
-using LessonsHub.Interfaces;
-using LessonsHub.Models.Requests;
+using LessonsHub.Infrastructure.Data;
+using LessonsHub.Domain.Entities;
+using LessonsHub.Application.Interfaces;
+using LessonsHub.Application.Models.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

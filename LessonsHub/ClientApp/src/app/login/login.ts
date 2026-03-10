@@ -1,4 +1,5 @@
-import { Component, OnInit, AfterViewInit, inject } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, inject, NgZone } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { MatIconModule } from '@angular/material/icon';
@@ -21,6 +22,10 @@ declare const google: {
 export class Login implements OnInit, AfterViewInit {
   private auth = inject(AuthService);
   private router = inject(Router);
+  private ngZone = inject(NgZone);
+  private document = inject(DOCUMENT);
+
+  @ViewChild('googleBtn') googleBtn!: ElementRef<HTMLElement>;
 
   error = '';
   loading = false;
@@ -33,58 +38,73 @@ export class Login implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     if (!this.auth.isLoggedIn()) {
-      this.waitForGsi();
+      this.loadGoogleScript()
+        .then(() => this.initGoogle())
+        .catch(err => this.error = err);
     }
   }
 
-  private waitForGsi(): void {
-    if (typeof (window as any)['google'] !== 'undefined') {
-      this.initGoogle();
-    } else {
-      const script = document.querySelector('script[src*="accounts.google.com/gsi"]');
-      if (script) {
-        script.addEventListener('load', () => this.initGoogle());
-      } else {
-        let attempts = 0;
-        const interval = setInterval(() => {
-          attempts++;
-          if (typeof (window as any)['google'] !== 'undefined') {
-            clearInterval(interval);
-            this.initGoogle();
-          } else if (attempts > 50) {
-            clearInterval(interval);
-            this.error = 'Google Sign-In failed to load. Check your internet connection.';
-          }
-        }, 100);
+  private loadGoogleScript(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      // Check if already defined on window
+      const win = this.document.defaultView as any;
+      if (win && win.google?.accounts?.id) {
+        resolve();
+        return;
       }
-    }
+
+      const scriptUrl = 'https://accounts.google.com/gsi/client';
+      const existingScript = this.document.querySelector(`script[src*="${scriptUrl}"]`) as HTMLScriptElement;
+
+      if (existingScript) {
+        existingScript.addEventListener('load', () => resolve());
+        existingScript.addEventListener('error', () => reject('Google Sign-In failed to load. Check your internet connection.'));
+        return;
+      }
+
+      const script = this.document.createElement('script');
+      script.src = scriptUrl;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => resolve();
+      script.onerror = () => reject('Google Sign-In failed to load. Check your internet connection.');
+      this.document.head.appendChild(script);
+    });
   }
 
   private initGoogle(): void {
-    const clientId = (window as { GOOGLE_CLIENT_ID?: string }).GOOGLE_CLIENT_ID
-      ?? document.querySelector<HTMLMetaElement>('meta[name="google-client-id"]')?.content
+    const win = this.document.defaultView as any;
+    const clientId = win?.GOOGLE_CLIENT_ID
+      ?? this.document.querySelector<HTMLMetaElement>('meta[name="google-client-id"]')?.content
       ?? '';
 
-    (window as any)['google'].accounts.id.initialize({
+    if (!clientId) {
+      this.error = 'Google Client ID is missing.';
+      return;
+    }
+
+    google.accounts.id.initialize({
       client_id: clientId,
-      callback: async (response: { credential: string }) => {
-        this.loading = true;
-        this.error = '';
-        try {
-          await this.auth.loginWithGoogle(response.credential);
-          this.router.navigate(['/today']);
-        } catch (err) {
-          console.error('Sign-in error:', err);
-          this.error = 'Sign-in failed. Please try again.';
-        } finally {
-          this.loading = false;
-        }
+      callback: (response: { credential: string }) => {
+        // Run inside NgZone so Angular change detection handles the updates
+        this.ngZone.run(async () => {
+          this.loading = true;
+          this.error = '';
+          try {
+            await this.auth.loginWithGoogle(response.credential);
+            await this.router.navigate(['/today']);
+          } catch (err) {
+            console.error('Sign-in error:', err);
+            this.error = 'Sign-in failed. Please try again.';
+          } finally {
+            this.loading = false;
+          }
+        });
       }
     });
 
-    const btn = document.getElementById('google-btn');
-    if (btn) {
-      (window as any)['google'].accounts.id.renderButton(btn, {
+    if (this.googleBtn?.nativeElement) {
+      google.accounts.id.renderButton(this.googleBtn.nativeElement, {
         type: 'standard',
         shape: 'rectangular',
         theme: 'outline',

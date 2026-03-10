@@ -1,20 +1,44 @@
 import { Routes } from '@angular/router';
-import { LessonPlan } from './lesson-plan/lesson-plan';
-import { LessonPlans } from './lesson-plans/lesson-plans';
-import { LessonPlanDetail } from './lesson-plan-detail/lesson-plan-detail';
-import { LessonDays } from './lesson-days/lesson-days';
-import { TodaysLessons } from './todays-lessons/todays-lessons';
-import { LessonDetail } from './lesson-detail/lesson-detail';
-import { Login } from './login/login';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
-  { path: 'login', component: Login },
-  { path: '', redirectTo: '/today', pathMatch: 'full' },
-  { path: 'today', component: TodaysLessons, canActivate: [authGuard] },
-  { path: 'lesson/:id', component: LessonDetail, canActivate: [authGuard] },
-  { path: 'lesson-plan', component: LessonPlan, canActivate: [authGuard] },
-  { path: 'lesson-plans', component: LessonPlans, canActivate: [authGuard] },
-  { path: 'lesson-plans/:id', component: LessonPlanDetail, canActivate: [authGuard] },
-  { path: 'lesson-days', component: LessonDays, canActivate: [authGuard] }
+  {
+    path: 'login',
+    loadComponent: () => import('./login/login').then(c => c.Login)
+  },
+  {
+    path: '',
+    redirectTo: '/today',
+    pathMatch: 'full'
+  },
+  {
+    path: 'today',
+    loadComponent: () => import('./todays-lessons/todays-lessons').then(c => c.TodaysLessons),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'lesson/:id',
+    loadComponent: () => import('./lesson-detail/lesson-detail').then(c => c.LessonDetail),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'lesson-plan',
+    loadComponent: () => import('./lesson-plan/lesson-plan').then(c => c.LessonPlan),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'lesson-plans',
+    loadComponent: () => import('./lesson-plans/lesson-plans').then(c => c.LessonPlans),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'lesson-plans/:id',
+    loadComponent: () => import('./lesson-plan-detail/lesson-plan-detail').then(c => c.LessonPlanDetail),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'lesson-days',
+    loadComponent: () => import('./lesson-days/lesson-days').then(c => c.LessonDays),
+    canActivate: [authGuard]
+  }
 ];

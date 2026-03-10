@@ -1,7 +1,7 @@
 using Google.Apis.Auth;
-using LessonsHub.Data;
-using LessonsHub.Entities;
-using LessonsHub.Services;
+using LessonsHub.Infrastructure.Data;
+using LessonsHub.Domain.Entities;
+using LessonsHub.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

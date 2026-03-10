@@ -1,8 +1,8 @@
 using System.Text;
-using LessonsHub.Configuration;
-using LessonsHub.Data;
-using LessonsHub.Interfaces;
-using LessonsHub.Services;
+using LessonsHub.Infrastructure.Configuration;
+using LessonsHub.Infrastructure.Data;
+using LessonsHub.Application.Interfaces;
+using LessonsHub.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -150,7 +150,12 @@ app.UseCors("AllowAngular");
 // Allow Google Sign-In popup to communicate with the opener page
 app.Use(async (context, next) =>
 {
-    context.Response.Headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups";
+    context.Response.OnStarting(() =>
+    {
+        context.Response.Headers.Remove("Cross-Origin-Opener-Policy");
+        context.Response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+        return Task.CompletedTask;
+    });
     await next();
 });
 
