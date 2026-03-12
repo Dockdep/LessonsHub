@@ -15,13 +15,33 @@ export class LessonService {
     return this.http.get<Lesson>(`${this.apiUrl}/${id}`);
   }
 
-  generateExercise(lessonId: number, difficulty: string): Observable<Exercise> {
-    return this.http.post<Exercise>(`${this.apiUrl}/${lessonId}/generate-exercise?difficulty=${difficulty}`, {});
+  generateExercise(lessonId: number, difficulty: string, comment?: string): Observable<Exercise> {
+    let url = `${this.apiUrl}/${lessonId}/generate-exercise?difficulty=${difficulty}`;
+    if (comment) {
+      url += `&comment=${encodeURIComponent(comment)}`;
+    }
+    return this.http.post<Exercise>(url, {});
+  }
+
+  retryExercise(lessonId: number, difficulty: string, review: string, comment?: string): Observable<Exercise> {
+    let url = `${this.apiUrl}/${lessonId}/retry-exercise?difficulty=${encodeURIComponent(difficulty)}&review=${encodeURIComponent(review)}`;
+    if (comment) {
+      url += `&comment=${encodeURIComponent(comment)}`;
+    }
+    return this.http.post<Exercise>(url, {});
   }
 
   submitExerciseAnswer(exerciseId: number, answer: string): Observable<ExerciseAnswer> {
     return this.http.post<ExerciseAnswer>(`${this.apiUrl}/exercise/${exerciseId}/check`, JSON.stringify(answer), {
       headers: { 'Content-Type': 'application/json' }
     });
+  }
+
+  completeLesson(lessonId: number): Observable<Lesson> {
+    return this.http.patch<Lesson>(`${this.apiUrl}/${lessonId}/complete`, {});
+  }
+
+  getSiblingLessonIds(lessonId: number): Observable<{ prevLessonId: number | null, nextLessonId: number | null }> {
+    return this.http.get<{ prevLessonId: number | null, nextLessonId: number | null }>(`${this.apiUrl}/${lessonId}/siblings`);
   }
 }

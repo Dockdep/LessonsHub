@@ -4,6 +4,7 @@ export interface LessonPlanRequest {
   numberOfDays: number | null;
   topic: string;
   description: string;
+  nativeLanguage?: string;
 }
 
 export const LESSON_TYPES = ['Technical', 'Language', 'Default'];

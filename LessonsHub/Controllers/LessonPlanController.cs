@@ -1,14 +1,18 @@
-using LessonsHub.Data;
-using LessonsHub.Entities;
-using LessonsHub.Interfaces;
-using LessonsHub.Models.Requests;
-using LessonsHub.Models.Responses;
+using LessonsHub.Infrastructure.Data;
+using LessonsHub.Domain.Entities;
+using LessonsHub.Application.Interfaces;
+using LessonsHub.Application.Models.Requests;
+using LessonsHub.Application.Models.Responses;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace LessonsHub.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class LessonPlanController : ControllerBase
 {
     private readonly ILessonsAiApiClient _aiApiClient;
@@ -25,6 +29,97 @@ public class LessonPlanController : ControllerBase
         _logger = logger;
     }
 
+    private int GetCurrentUserId() =>
+        int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<LessonPlanDetailDto>> GetLessonPlanDetail(int id)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var lessonPlan = await _dbContext.LessonPlans
+                .Include(lp => lp.Lessons)
+                .FirstOrDefaultAsync(lp => lp.Id == id && lp.UserId == userId);
+
+            if (lessonPlan == null)
+                return NotFound(new { message = "Lesson plan not found." });
+
+            var detail = new LessonPlanDetailDto
+            {
+                Id = lessonPlan.Id,
+                Name = lessonPlan.Name,
+                Topic = lessonPlan.Topic,
+                Description = lessonPlan.Description,
+                NativeLanguage = lessonPlan.NativeLanguage,
+                CreatedDate = lessonPlan.CreatedDate,
+                Lessons = lessonPlan.Lessons
+                    .OrderBy(l => l.LessonNumber)
+                    .Select(l => new PlanLessonDto
+                    {
+                        Id = l.Id,
+                        LessonNumber = l.LessonNumber,
+                        Name = l.Name,
+                        ShortDescription = l.ShortDescription,
+                        LessonTopic = l.LessonTopic,
+                        IsCompleted = l.IsCompleted
+                    })
+                    .ToList()
+            };
+
+            return Ok(detail);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving lesson plan detail");
+            return StatusCode(500, new { message = "An error occurred while retrieving the lesson plan." });
+        }
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> DeleteLessonPlan(int id)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var lessonPlan = await _dbContext.LessonPlans
+                .Include(lp => lp.Lessons)
+                .FirstOrDefaultAsync(lp => lp.Id == id && lp.UserId == userId);
+
+            if (lessonPlan == null)
+                return NotFound(new { message = "Lesson plan not found." });
+
+            var affectedDayIds = lessonPlan.Lessons
+                .Where(l => l.LessonDayId != null)
+                .Select(l => l.LessonDayId!.Value)
+                .Distinct()
+                .ToList();
+
+            _dbContext.LessonPlans.Remove(lessonPlan);
+            await _dbContext.SaveChangesAsync();
+
+            if (affectedDayIds.Count > 0)
+            {
+                var emptyDays = await _dbContext.LessonDays
+                    .Where(ld => affectedDayIds.Contains(ld.Id) && !ld.Lessons.Any())
+                    .ToListAsync();
+
+                if (emptyDays.Count > 0)
+                {
+                    _dbContext.LessonDays.RemoveRange(emptyDays);
+                    await _dbContext.SaveChangesAsync();
+                }
+            }
+
+            return Ok(new { message = "Lesson plan deleted successfully." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting lesson plan");
+            return StatusCode(500, new { message = "An error occurred while deleting the lesson plan." });
+        }
+    }
+
     [HttpPost("generate")]
     public async Task<ActionResult<LessonPlanResponseDto>> GenerateLessonPlan([FromBody] LessonPlanRequestDto request)
     {
@@ -36,27 +131,23 @@ public class LessonPlanController : ControllerBase
                 return BadRequest(new { message = "Invalid input. Please provide plan name and topic." });
             }
 
-            // Call the AI API
             var aiRequest = new AiLessonPlanRequest
             {
                 LessonType = request.LessonType,
-                PlanName = request.PlanName,
                 Topic = request.Topic,
                 NumberOfLessons = request.NumberOfDays,
-                Description = request.Description
+                Description = request.Description,
+                Language = request.NativeLanguage
             };
 
             var aiResponse = await _aiApiClient.GenerateLessonPlanAsync(aiRequest);
 
             if (aiResponse == null)
-            {
                 return StatusCode(500, new { message = "Failed to get lesson plan from AI API." });
-            }
 
-            // Map AI response to our DTO
             var lessonPlan = new LessonPlanResponseDto
             {
-                PlanName = aiResponse.PlanName,
+                PlanName = request.PlanName, // Use the one from the incoming HTTP request DTO
                 Topic = aiResponse.Topic,
                 Lessons = aiResponse.Lessons.Select(l => new GeneratedLessonDto
                 {
@@ -87,24 +178,24 @@ public class LessonPlanController : ControllerBase
     {
         try
         {
-            if (request == null || request.LessonPlan == null || request.LessonPlan.Lessons == null || !request.LessonPlan.Lessons.Any())
-            {
+            if (request?.LessonPlan?.Lessons == null || !request.LessonPlan.Lessons.Any())
                 return BadRequest(new { message = "Invalid lesson plan data." });
-            }
 
-            // Create LessonPlan
+            var userId = GetCurrentUserId();
+
             var lessonPlan = new LessonPlan
             {
                 Name = request.LessonPlan.PlanName,
                 Topic = request.LessonPlan.Topic,
                 Description = request.Description ?? string.Empty,
-                CreatedDate = DateTime.UtcNow
+                NativeLanguage = request.NativeLanguage,
+                CreatedDate = DateTime.UtcNow,
+                UserId = userId
             };
 
             _dbContext.LessonPlans.Add(lessonPlan);
             await _dbContext.SaveChangesAsync();
 
-            // Create Lessons
             foreach (var lessonDto in request.LessonPlan.Lessons)
             {
                 var lesson = new Lesson
@@ -119,7 +210,6 @@ public class LessonPlanController : ControllerBase
                     KeyPoints = lessonDto.KeyPoints ?? new(),
                     LessonDayId = null
                 };
-
                 _dbContext.Lessons.Add(lesson);
             }
 

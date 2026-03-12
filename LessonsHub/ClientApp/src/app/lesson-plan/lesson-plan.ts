@@ -36,6 +36,7 @@ export class LessonPlan {
   numberOfDays: number | null = null;
   topic: string = '';
   description: string = '';
+  nativeLanguage: string = '';
   isLoading: boolean = false;
   isSaving: boolean = false;
   error: string = '';
@@ -62,7 +63,8 @@ export class LessonPlan {
       planName: this.planName,
       numberOfDays: this.numberOfDays,
       topic: this.topic,
-      description: this.description
+      description: this.description,
+      nativeLanguage: this.nativeLanguage || undefined
     };
 
     this.lessonPlanService.generateLessonPlan(request).subscribe({
@@ -88,7 +90,7 @@ export class LessonPlan {
     this.saveSuccess = false;
     this.error = '';
 
-    this.lessonPlanService.saveLessonPlan(this.generatedPlan, this.description, this.lessonType).subscribe({
+    this.lessonPlanService.saveLessonPlan(this.generatedPlan, this.description, this.lessonType, this.nativeLanguage).subscribe({
       next: (response) => {
         console.log('Save response:', response);
         this.saveSuccess = true;
@@ -116,6 +118,7 @@ export class LessonPlan {
     this.numberOfDays = null;
     this.topic = '';
     this.description = '';
+    this.nativeLanguage = '';
     this.error = '';
     this.saveSuccess = false;
     this.generatedPlan = null;

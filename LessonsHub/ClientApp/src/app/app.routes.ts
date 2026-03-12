@@ -1,13 +1,44 @@
 import { Routes } from '@angular/router';
-import { LessonPlan } from './lesson-plan/lesson-plan';
-import { LessonDays } from './lesson-days/lesson-days';
-import { TodaysLessons } from './todays-lessons/todays-lessons'; // Import the new component
-import { LessonDetail } from './lesson-detail/lesson-detail';
+import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/today', pathMatch: 'full' }, // Optional: Make Today the home page
-  { path: 'today', component: TodaysLessons },
-  { path: 'lesson/:id', component: LessonDetail },
-  { path: 'lesson-plan', component: LessonPlan },
-  { path: 'lesson-days', component: LessonDays }
+  {
+    path: 'login',
+    loadComponent: () => import('./login/login').then(c => c.Login)
+  },
+  {
+    path: '',
+    redirectTo: '/today',
+    pathMatch: 'full'
+  },
+  {
+    path: 'today',
+    loadComponent: () => import('./todays-lessons/todays-lessons').then(c => c.TodaysLessons),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'lesson/:id',
+    loadComponent: () => import('./lesson-detail/lesson-detail').then(c => c.LessonDetail),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'lesson-plan',
+    loadComponent: () => import('./lesson-plan/lesson-plan').then(c => c.LessonPlan),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'lesson-plans',
+    loadComponent: () => import('./lesson-plans/lesson-plans').then(c => c.LessonPlans),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'lesson-plans/:id',
+    loadComponent: () => import('./lesson-plan-detail/lesson-plan-detail').then(c => c.LessonPlanDetail),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'lesson-days',
+    loadComponent: () => import('./lesson-days/lesson-days').then(c => c.LessonDays),
+    canActivate: [authGuard]
+  }
 ];

@@ -1,14 +1,17 @@
-using LessonsHub.Data;
-using LessonsHub.Entities;
-using LessonsHub.Interfaces;
-using LessonsHub.Models.Requests;
+using LessonsHub.Infrastructure.Data;
+using LessonsHub.Domain.Entities;
+using LessonsHub.Application.Interfaces;
+using LessonsHub.Application.Models.Requests;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace LessonsHub.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class LessonController : ControllerBase
 {
     private readonly LessonsHubDbContext _dbContext;
@@ -25,9 +28,13 @@ public class LessonController : ControllerBase
         _logger = logger;
     }
 
+    private int GetCurrentUserId() =>
+        int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
     [HttpGet("{id}")]
     public async Task<ActionResult<Lesson>> GetLesson(int id)
     {
+        var userId = GetCurrentUserId();
         var lesson = await _dbContext.Lessons
             .Include(l => l.Exercises)
                 .ThenInclude(e => e.Answers)
@@ -37,13 +44,12 @@ public class LessonController : ControllerBase
             .Include(l => l.Documentation)
             .FirstOrDefaultAsync(l => l.Id == id);
 
-        if (lesson == null) return NotFound();
+        if (lesson == null || lesson.LessonPlan?.UserId != userId) return NotFound();
 
         var planName = lesson.LessonPlan?.Name ?? "General Course";
         var planTopic = lesson.LessonPlan?.Topic ?? planName;
         var planDescription = lesson.LessonPlan?.Description ?? "";
 
-        // Generate content if missing
         if (string.IsNullOrWhiteSpace(lesson.Content))
         {
             _logger.LogInformation("Generating content for Lesson {Id}...", id);
@@ -52,7 +58,6 @@ public class LessonController : ControllerBase
             {
                 var contentRequest = new AiLessonContentRequest
                 {
-                    PlanName = planName,
                     Topic = planTopic,
                     LessonType = lesson.LessonType,
                     LessonTopic = lesson.LessonTopic,
@@ -60,7 +65,8 @@ public class LessonController : ControllerBase
                     PlanDescription = planDescription,
                     LessonNumber = lesson.LessonNumber,
                     LessonName = lesson.Name,
-                    LessonDescription = lesson.ShortDescription ?? ""
+                    LessonDescription = lesson.ShortDescription ?? "",
+                    Language = lesson.LessonPlan?.NativeLanguage
                 };
 
                 var contentResponse = await _aiApiClient.GenerateLessonContentAsync(contentRequest);
@@ -78,95 +84,28 @@ public class LessonController : ControllerBase
             }
         }
 
-        // Generate resources if missing
-        //if (!lesson.Videos.Any() && !lesson.Books.Any() && !lesson.Documentation.Any())
-        //{
-        //    _logger.LogInformation("Generating resources for Lesson {Id}...", id);
-
-        //    try
-        //    {
-        //        var resourcesRequest = new AiLessonResourcesRequest
-        //        {
-        //            LessonType = lesson.LessonType,
-        //            Topic = planTopic,
-        //            LessonName = lesson.Name,
-        //            LessonTopic = lesson.LessonTopic,
-        //            LessonDescription = lesson.ShortDescription ?? ""
-        //        };
-
-        //        var resourcesResponse = await _aiApiClient.GenerateLessonResourcesAsync(resourcesRequest);
-
-                //        if (resourcesResponse != null)
-                //        {
-                //            // Add videos
-                //            foreach (var video in resourcesResponse.Videos)
-                //            {
-                //                lesson.Videos.Add(new Video
-                //                {
-                //                    Title = video.Title,
-                //                    Channel = video.Channel,
-                //                    Description = video.Description,
-                //                    Url = video.Url,
-                //                    LessonId = lesson.Id
-                //                });
-                //            }
-
-                //            // Add books
-                //            foreach (var book in resourcesResponse.Books)
-                //            {
-                //                lesson.Books.Add(new Book
-                //                {
-                //                    Author = book.Author,
-                //                    BookName = book.BookName,
-                //                    ChapterNumber = book.ChapterNumber,
-                //                    ChapterName = book.ChapterName,
-                //                    Description = book.Description,
-                //                    LessonId = lesson.Id
-                //                });
-                //            }
-
-                //            // Add documentation
-                //            foreach (var doc in resourcesResponse.Documentation)
-                //            {
-                //                lesson.Documentation.Add(new Documentation
-                //                {
-                //                    Name = doc.Name,
-                //                    Section = doc.Section,
-                //                    Description = doc.Description,
-                //                    Url = doc.Url,
-                //                    LessonId = lesson.Id
-                //                });
-                //            }
-
-                //            await _dbContext.SaveChangesAsync();
-                //            _logger.LogInformation("Resources generated and saved for Lesson {Id}", id);
-                //        }
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        _logger.LogError(ex, "Error generating resources for Lesson {Id}", id);
-                //    }
-                //}
-
-                return Ok(lesson);
+        return Ok(lesson);
     }
 
     [HttpPost("{id}/generate-exercise")]
-    public async Task<ActionResult<Exercise>> GenerateExercise(int id, [FromQuery] string difficulty = "medium")
+    public async Task<ActionResult<Exercise>> GenerateExercise(int id, [FromQuery] string difficulty = "medium", [FromQuery] string? comment = null)
     {
+        var userId = GetCurrentUserId();
         var lesson = await _dbContext.Lessons
             .Include(l => l.LessonPlan)
             .FirstOrDefaultAsync(l => l.Id == id);
 
-        if (lesson == null) return NotFound();
+        if (lesson == null || lesson.LessonPlan?.UserId != userId) return NotFound();
 
         if (string.IsNullOrWhiteSpace(lesson.Content))
-        {
             return BadRequest(new { message = "Lesson content must be generated first." });
-        }
 
         try
         {
+            var planName = lesson.LessonPlan?.Name ?? "General Course";
+            var planTopic = lesson.LessonPlan?.Topic ?? planName;
+            var planDescription = lesson.LessonPlan?.Description ?? "";
+
             var exerciseRequest = new AiLessonExerciseRequest
             {
                 LessonType = lesson.LessonType,
@@ -174,16 +113,16 @@ public class LessonController : ControllerBase
                 LessonNumber = lesson.LessonNumber,
                 LessonName = lesson.Name,
                 LessonDescription = lesson.ShortDescription ?? "",
-                LessonContent = lesson.Content,
-                Difficulty = difficulty
+                KeyPoints = lesson.KeyPoints ?? new(),
+                Difficulty = difficulty,
+                Comment = comment,
+                NativeLanguage = lesson.LessonPlan?.NativeLanguage
             };
 
             var exerciseResponse = await _aiApiClient.GenerateLessonExerciseAsync(exerciseRequest);
 
             if (exerciseResponse == null || string.IsNullOrWhiteSpace(exerciseResponse.Exercise))
-            {
                 return StatusCode(500, new { message = "Failed to generate exercise from AI API." });
-            }
 
             var exercise = new Exercise
             {
@@ -210,19 +149,84 @@ public class LessonController : ControllerBase
         }
     }
 
+    [HttpPost("{id}/retry-exercise")]
+    public async Task<ActionResult<Exercise>> RetryExercise(int id, [FromQuery] string difficulty = "medium", [FromQuery] string? comment = null, [FromQuery] string review = "")
+    {
+        var userId = GetCurrentUserId();
+        var lesson = await _dbContext.Lessons
+            .Include(l => l.LessonPlan)
+            .FirstOrDefaultAsync(l => l.Id == id);
+
+        if (lesson == null || lesson.LessonPlan?.UserId != userId) return NotFound();
+
+        if (string.IsNullOrWhiteSpace(lesson.Content))
+            return BadRequest(new { message = "Lesson content must be generated first." });
+
+        if (string.IsNullOrWhiteSpace(review))
+            return BadRequest(new { message = "Review text is required for retry." });
+
+        try
+        {
+            var planName = lesson.LessonPlan?.Name ?? "General Course";
+            var planTopic = lesson.LessonPlan?.Topic ?? planName;
+            var planDescription = lesson.LessonPlan?.Description ?? "";
+
+            var retryRequest = new AiExerciseRetryRequest
+            {
+                LessonType = lesson.LessonType,
+                LessonTopic = lesson.LessonTopic,
+                LessonNumber = lesson.LessonNumber,
+                LessonName = lesson.Name,
+                LessonDescription = lesson.ShortDescription ?? "",
+                KeyPoints = lesson.KeyPoints ?? new(),
+                Difficulty = difficulty,
+                Review = review,
+                Comment = comment,
+                NativeLanguage = lesson.LessonPlan?.NativeLanguage
+            };
+
+            var exerciseResponse = await _aiApiClient.RetryLessonExerciseAsync(retryRequest);
+
+            if (exerciseResponse == null || string.IsNullOrWhiteSpace(exerciseResponse.Exercise))
+                return StatusCode(500, new { message = "Failed to generate exercise from AI API." });
+
+            var exercise = new Exercise
+            {
+                ExerciseText = exerciseResponse.Exercise,
+                Difficulty = difficulty,
+                LessonId = lesson.Id
+            };
+
+            _dbContext.Exercises.Add(exercise);
+            await _dbContext.SaveChangesAsync();
+
+            _logger.LogInformation("Retry exercise generated and saved for Lesson {Id}", id);
+            return Ok(exercise);
+        }
+        catch (TimeoutException ex)
+        {
+            _logger.LogError(ex, "Timeout retrying exercise for Lesson {Id}", id);
+            return StatusCode(504, new { message = "The AI service is taking too long. Please try again." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrying exercise for Lesson {Id}", id);
+            return StatusCode(500, new { message = "An error occurred while generating the exercise.", error = ex.Message });
+        }
+    }
+
     [HttpPost("exercise/{exerciseId}/check")]
     public async Task<ActionResult<ExerciseAnswer>> CheckExerciseReview(int exerciseId, [FromBody] string answer)
     {
+        var userId = GetCurrentUserId();
         var exercise = await _dbContext.Exercises
-            .Include(e => e.Lesson)
+            .Include(e => e.Lesson).ThenInclude(l => l.LessonPlan)
             .FirstOrDefaultAsync(e => e.Id == exerciseId);
 
-        if (exercise == null) return NotFound();
+        if (exercise == null || exercise.Lesson.LessonPlan?.UserId != userId) return NotFound();
 
         if (string.IsNullOrWhiteSpace(answer))
-        {
             return BadRequest(new { message = "Answer cannot be empty." });
-        }
 
         try
         {
@@ -232,15 +236,14 @@ public class LessonController : ControllerBase
                 LessonContent = exercise.Lesson.Content,
                 ExerciseContent = exercise.ExerciseText,
                 Difficulty = exercise.Difficulty,
-                Answer = answer
+                Answer = answer,
+                Language = exercise.Lesson.LessonPlan?.NativeLanguage
             };
 
             var reviewResponse = await _aiApiClient.CheckExerciseReviewAsync(reviewRequest);
 
             if (reviewResponse == null)
-            {
                 return StatusCode(500, new { message = "Failed to get review from AI API." });
-            }
 
             var exerciseAnswer = new ExerciseAnswer
             {
@@ -267,5 +270,58 @@ public class LessonController : ControllerBase
             _logger.LogError(ex, "Error checking exercise review for Exercise {ExerciseId}", exerciseId);
             return StatusCode(500, new { message = "An error occurred while checking the exercise.", error = ex.Message });
         }
+    }
+
+    [HttpGet("{id}/siblings")]
+    public async Task<ActionResult> GetSiblingLessonIds(int id)
+    {
+        var userId = GetCurrentUserId();
+        var current = await _dbContext.Lessons
+            .AsNoTracking()
+            .Include(l => l.LessonPlan)
+            .Select(l => new { l.Id, l.LessonPlanId, l.LessonNumber, UserId = l.LessonPlan.UserId })
+            .FirstOrDefaultAsync(l => l.Id == id);
+
+        if (current == null || current.UserId != userId) return NotFound();
+
+        var siblings = _dbContext.Lessons.Where(l => l.LessonPlanId == current.LessonPlanId);
+
+        var prevId = await siblings
+            .Where(l => l.LessonNumber < current.LessonNumber)
+            .OrderByDescending(l => l.LessonNumber)
+            .Select(l => (int?)l.Id)
+            .FirstOrDefaultAsync();
+
+        var nextId = await siblings
+            .Where(l => l.LessonNumber > current.LessonNumber)
+            .OrderBy(l => l.LessonNumber)
+            .Select(l => (int?)l.Id)
+            .FirstOrDefaultAsync();
+
+        return Ok(new { prevLessonId = prevId, nextLessonId = nextId });
+    }
+
+    [HttpPatch("{id}/complete")]
+    public async Task<ActionResult<Lesson>> ToggleLessonComplete(int id)
+    {
+        var userId = GetCurrentUserId();
+        var lesson = await _dbContext.Lessons
+            .Include(l => l.Exercises)
+                .ThenInclude(e => e.Answers)
+            .Include(l => l.LessonPlan)
+            .Include(l => l.Videos)
+            .Include(l => l.Books)
+            .Include(l => l.Documentation)
+            .FirstOrDefaultAsync(l => l.Id == id);
+
+        if (lesson == null || lesson.LessonPlan?.UserId != userId) return NotFound();
+
+        lesson.IsCompleted = !lesson.IsCompleted;
+        lesson.CompletedAt = lesson.IsCompleted ? DateTime.UtcNow : null;
+
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation("Lesson {Id} marked as {Status}", id, lesson.IsCompleted ? "completed" : "incomplete");
+        return Ok(lesson);
     }
 }

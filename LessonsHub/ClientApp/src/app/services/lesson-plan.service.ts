@@ -15,11 +15,12 @@ export class LessonPlanService {
     return this.http.post<LessonPlanResponse>(`${this.apiUrl}/generate`, request);
   }
 
-  saveLessonPlan(lessonPlan: LessonPlanResponse, description: string, lessonType: string): Observable<any> {
+  saveLessonPlan(lessonPlan: LessonPlanResponse, description: string, lessonType: string, nativeLanguage?: string): Observable<any> {
     const request = {
       lessonPlan: lessonPlan,
       description: description,
-      lessonType: lessonType
+      lessonType: lessonType,
+      nativeLanguage: nativeLanguage || null
     };
     return this.http.post(`${this.apiUrl}/save`, request);
   }

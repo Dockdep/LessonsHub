@@ -1,9 +1,9 @@
 <div class="lesson-viewer fade-in">
   <!-- Top Nav -->
-  <div class="nav-back">
-    <button mat-button routerLink="/today">
-      <mat-icon>arrow_back</mat-icon> Back to Dashboard
-    </button>
+  <div class="nav-back" *ngIf="lesson">
+    <a mat-button [routerLink]="['/lesson-plans', lesson.lessonPlanId]">
+      <mat-icon>arrow_back</mat-icon> Back to Lesson Plan
+    </a>
   </div>
 
   <div class="loading-overlay" *ngIf="isLoading">
@@ -18,8 +18,14 @@
     <!-- Main Content Column -->
     <article class="content-column">
       <header class="lesson-hero">
-        <div class="hero-badge">Lesson {{ lesson.lessonNumber }}</div>
+        <div class="hero-top-row">
+          <div class="hero-badge">Lesson {{ lesson.lessonNumber }}</div>
+          <span class="completed-badge" *ngIf="lesson.isCompleted">
+            <mat-icon>check_circle</mat-icon> Completed
+          </span>
+        </div>
         <h1 class="lesson-heading">{{ lesson.name }}</h1>
+        <span class="lesson-topic" *ngIf="lesson.lessonTopic">{{ lesson.lessonTopic }}</span>
         <p class="lesson-lead">{{ lesson.shortDescription }}</p>
       </header>
       
@@ -38,17 +44,11 @@
           </mat-card-header>
 
           <mat-card-content>
-            <div class="generator-box">
-              <mat-form-field appearance="outline" class="density-compact">
-                <mat-label>Difficulty</mat-label>
-                <mat-select [(ngModel)]="selectedDifficulty">
-                  <mat-option *ngFor="let d of difficulties" [value]="d">{{ d }}</mat-option>
-                </mat-select>
-              </mat-form-field>
-
-              <button mat-raised-button color="primary" (click)="generateExercise()" [disabled]="isGeneratingExercise">
-                <span *ngIf="!isGeneratingExercise">Generate Task</span>
-                <mat-spinner diameter="20" *ngIf="isGeneratingExercise"></mat-spinner>
+            <div class="generate-btn-row">
+              <button mat-raised-button color="primary" (click)="openGenerateDialog()" [disabled]="isGeneratingExercise">
+                <mat-icon *ngIf="!isGeneratingExercise">auto_awesome</mat-icon>
+                <mat-spinner diameter="20" *ngIf="isGeneratingExercise" class="spinner-white"></mat-spinner>
+                <span>Generate Task</span>
               </button>
             </div>
 
@@ -72,7 +72,10 @@
 
                     <!-- Previous Attempts -->
                     <div class="feedback-history" *ngIf="exercise.answers && exercise.answers.length > 0">
-                      <div class="history-label">Previous Attempts</div>
+                      <div class="history-header">
+                        <span class="history-label">Previous Attempts</span>
+                
+                      </div>
                       <div class="attempt-card" *ngFor="let answer of exercise.answers">
                         <div class="attempt-meta">
                           <span class="score-badge"
@@ -87,13 +90,22 @@
                         <div class="ai-review" *ngIf="answer.reviewText">
                           <markdown [data]="answer.reviewText"></markdown>
                         </div>
+                        <div>
+                            <button mat-stroked-button class="retry-btn"
+                              (click)="openGenerateDialog(exercise.answers[exercise.answers.length - 1].reviewText)"
+                              [disabled]="isGeneratingExercise"
+                              *ngIf="exercise.answers[exercise.answers.length - 1].reviewText">
+                              <mat-icon>replay</mat-icon>
+                              Generate Task Based on Review
+                            </button>
+                        </div>
                       </div>
                     </div>
 
                     <!-- Submit New Answer -->
                     <div class="answer-section">
                       <mat-form-field appearance="outline" class="full-width">
-                        <mat-label>Your Answer</mat-label>
+                        <mat-label>Your Response</mat-label>
                         <textarea matInput [(ngModel)]="answerTexts[exercise.id]" rows="3" placeholder="Type your solution..."></textarea>
                       </mat-form-field>
 
@@ -111,6 +123,29 @@
           </mat-card-content>
         </mat-card>
       </section>
+
+      <!-- Complete Lesson -->
+      <div class="complete-section">
+        <button mat-raised-button
+          [class]="lesson.isCompleted ? 'complete-btn completed' : 'complete-btn'"
+          (click)="toggleComplete()"
+          [disabled]="isTogglingComplete">
+          <mat-icon>{{ lesson.isCompleted ? 'check_circle' : 'check_circle_outline' }}</mat-icon>
+          {{ lesson.isCompleted ? 'Completed' : 'Mark as Complete' }}
+        </button>
+      </div>
+
+      <!-- Navigation -->
+      <div class="lesson-nav">
+        <a mat-stroked-button class="nav-btn prev-btn" *ngIf="prevLessonId" [routerLink]="['/lesson', prevLessonId]">
+          <mat-icon>arrow_back</mat-icon>
+          Previous Lesson
+        </a>
+        <a mat-raised-button class="nav-btn next-btn" *ngIf="nextLessonId" [routerLink]="['/lesson', nextLessonId]">
+          Next Lesson
+          <mat-icon>arrow_forward</mat-icon>
+        </a>
+      </div>
     </article>
   </div>
 </div>

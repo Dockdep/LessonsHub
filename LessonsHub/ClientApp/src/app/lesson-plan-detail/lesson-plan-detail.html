@@ -1,0 +1,62 @@
+<div class="detail-container fade-in">
+  <a routerLink="/lesson-plans" class="back-link">
+    <mat-icon>arrow_back</mat-icon>
+    <span>Back to My Plans</span>
+  </a>
+
+  <mat-progress-bar mode="indeterminate" *ngIf="isLoading"></mat-progress-bar>
+
+  <div class="error-banner" *ngIf="error">
+    <mat-icon>warning</mat-icon>
+    <span>{{ error }}</span>
+  </div>
+
+  <div *ngIf="plan && !isLoading">
+    <div class="plan-header">
+      <div class="plan-header-left">
+        <div class="plan-icon">
+          <mat-icon>menu_book</mat-icon>
+        </div>
+        <div>
+          <h1 class="plan-title">{{ plan.name }}</h1>
+          <mat-chip-set>
+            <mat-chip>{{ plan.topic }}</mat-chip>
+            <mat-chip *ngIf="plan.nativeLanguage">{{ plan.nativeLanguage }}</mat-chip>
+            <mat-chip class="count-chip">{{ plan.lessons.length }} Lessons</mat-chip>
+          </mat-chip-set>
+        </div>
+      </div>
+      <div class="plan-header-right">
+        <span class="plan-date">{{ plan.createdDate | date:'mediumDate' }}</span>
+        <button mat-stroked-button color="warn" class="delete-btn" (click)="confirmDelete()" [disabled]="isDeleting">
+          <mat-icon>delete</mat-icon>
+          Delete
+        </button>
+      </div>
+    </div>
+
+    <p class="plan-description" *ngIf="plan.description">{{ plan.description }}</p>
+
+    <h2 class="section-title">Lessons</h2>
+
+    <div class="lessons-list" *ngIf="plan.lessons.length > 0">
+      <a class="lesson-card" [class.completed]="lesson.isCompleted" *ngFor="let lesson of plan.lessons" [routerLink]="['/lesson', lesson.id]">
+        <div class="lesson-num" [class.completed]="lesson.isCompleted">
+          <mat-icon *ngIf="lesson.isCompleted" class="check-icon">check</mat-icon>
+          <span *ngIf="!lesson.isCompleted">{{ lesson.lessonNumber }}</span>
+        </div>
+        <div class="lesson-info">
+          <h3 class="lesson-name">{{ lesson.name }}</h3>
+          <span class="lesson-topic" *ngIf="lesson.lessonTopic">{{ lesson.lessonTopic }}</span>
+          <p class="lesson-desc">{{ lesson.shortDescription }}</p>
+        </div>
+        <mat-icon class="arrow-icon">chevron_right</mat-icon>
+      </a>
+    </div>
+
+    <div class="empty-state" *ngIf="plan.lessons.length === 0">
+      <mat-icon>school</mat-icon>
+      <p>No lessons in this plan yet.</p>
+    </div>
+  </div>
+</div>

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { LessonDay, LessonPlanSummary, AvailableLesson, AssignLessonRequest } from '../models/lesson-day.model';
+import { LessonDay, LessonPlanSummary, LessonPlanDetail, AvailableLesson, AssignLessonRequest } from '../models/lesson-day.model';
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +13,14 @@ export class LessonDayService {
 
   getLessonPlans(): Observable<LessonPlanSummary[]> {
     return this.http.get<LessonPlanSummary[]>(`${this.apiUrl}/plans`);
+  }
+
+  getLessonPlanDetail(id: number): Observable<LessonPlanDetail> {
+    return this.http.get<LessonPlanDetail>(`/api/lessonplan/${id}`);
+  }
+
+  deleteLessonPlan(id: number): Observable<any> {
+    return this.http.delete(`/api/lessonplan/${id}`);
   }
 
   getAvailableLessons(lessonPlanId: number): Observable<AvailableLesson[]> {

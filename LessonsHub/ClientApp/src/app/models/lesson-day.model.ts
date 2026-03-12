@@ -13,6 +13,7 @@ export interface AssignedLesson {
   shortDescription: string;
   lessonPlanId: number;
   lessonPlanName: string;
+  isCompleted: boolean;
 }
 
 export interface LessonPlanSummary {
@@ -39,4 +40,23 @@ export interface AssignLessonRequest {
   date: string;
   dayName: string;
   dayDescription: string;
+}
+
+export interface LessonPlanDetail {
+  id: number;
+  name: string;
+  topic: string;
+  description: string;
+  nativeLanguage?: string;
+  createdDate: string;
+  lessons: PlanLesson[];
+}
+
+export interface PlanLesson {
+  id: number;
+  lessonNumber: number;
+  name: string;
+  shortDescription: string;
+  lessonTopic: string;
+  isCompleted: boolean;
 }

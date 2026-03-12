@@ -91,13 +91,13 @@
 
             <div class="assigned-lessons">
               <div class="lesson-chip" *ngFor="let lesson of day.lessons">
-                <div class="chip-content">
+                <a class="chip-content" [routerLink]="['/lesson', lesson.id]">
                   <span class="chip-num">#{{ lesson.lessonNumber }}</span>
                   <div class="chip-text">
                     <span class="chip-name">{{ lesson.name }}</span>
                     <span class="chip-plan">{{ lesson.lessonPlanName }}</span>
                   </div>
-                </div>
+                </a>
                 <button mat-icon-button class="remove-btn" (click)="unassignLesson(lesson.id)">
                   <mat-icon>close</mat-icon>
                 </button>
