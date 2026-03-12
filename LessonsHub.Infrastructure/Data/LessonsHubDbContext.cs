@@ -23,6 +23,7 @@ public class LessonsHubDbContext : DbContext
     public DbSet<Video> Videos { get; set; }
     public DbSet<Book> Books { get; set; }
     public DbSet<Documentation> Documentation { get; set; }
+    public DbSet<AiRequestLog> AiRequestLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -199,6 +200,24 @@ public class LessonsHubDbContext : DbContext
                 .WithMany(l => l.Documentation)
                 .HasForeignKey(e => e.LessonId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // AiRequestLog configuration
+        modelBuilder.Entity<AiRequestLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.RequestType).HasMaxLength(100);
+            entity.Property(e => e.ModelName).HasMaxLength(100);
+            entity.Property(e => e.FinishReason).HasMaxLength(100);
+            
+            entity.Property(e => e.PricePerIn).HasColumnType("decimal(18,8)");
+            entity.Property(e => e.PricePerOut).HasColumnType("decimal(18,8)");
+            entity.Property(e => e.TotalCost).HasColumnType("decimal(18,8)");
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

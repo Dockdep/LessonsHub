@@ -134,7 +134,6 @@ public class LessonPlanController : ControllerBase
             var aiRequest = new AiLessonPlanRequest
             {
                 LessonType = request.LessonType,
-                PlanName = request.PlanName,
                 Topic = request.Topic,
                 NumberOfLessons = request.NumberOfDays,
                 Description = request.Description,
@@ -148,7 +147,7 @@ public class LessonPlanController : ControllerBase
 
             var lessonPlan = new LessonPlanResponseDto
             {
-                PlanName = aiResponse.PlanName,
+                PlanName = request.PlanName, // Use the one from the incoming HTTP request DTO
                 Topic = aiResponse.Topic,
                 Lessons = aiResponse.Lessons.Select(l => new GeneratedLessonDto
                 {

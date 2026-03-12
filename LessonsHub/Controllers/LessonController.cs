@@ -58,7 +58,6 @@ public class LessonController : ControllerBase
             {
                 var contentRequest = new AiLessonContentRequest
                 {
-                    PlanName = planName,
                     Topic = planTopic,
                     LessonType = lesson.LessonType,
                     LessonTopic = lesson.LessonTopic,
@@ -109,15 +108,11 @@ public class LessonController : ControllerBase
 
             var exerciseRequest = new AiLessonExerciseRequest
             {
-                PlanName = planName,
-                PlanTopic = planTopic,
-                PlanDescription = planDescription,
                 LessonType = lesson.LessonType,
                 LessonTopic = lesson.LessonTopic,
                 LessonNumber = lesson.LessonNumber,
                 LessonName = lesson.Name,
                 LessonDescription = lesson.ShortDescription ?? "",
-                LessonContent = lesson.Content,
                 KeyPoints = lesson.KeyPoints ?? new(),
                 Difficulty = difficulty,
                 Comment = comment,
@@ -178,15 +173,11 @@ public class LessonController : ControllerBase
 
             var retryRequest = new AiExerciseRetryRequest
             {
-                PlanName = planName,
-                PlanTopic = planTopic,
-                PlanDescription = planDescription,
                 LessonType = lesson.LessonType,
                 LessonTopic = lesson.LessonTopic,
                 LessonNumber = lesson.LessonNumber,
                 LessonName = lesson.Name,
                 LessonDescription = lesson.ShortDescription ?? "",
-                LessonContent = lesson.Content,
                 KeyPoints = lesson.KeyPoints ?? new(),
                 Difficulty = difficulty,
                 Review = review,

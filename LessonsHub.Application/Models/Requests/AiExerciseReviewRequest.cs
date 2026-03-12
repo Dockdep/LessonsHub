@@ -21,4 +21,7 @@ public class AiExerciseReviewRequest
 
     [JsonPropertyName("language")]
     public string? Language { get; set; }
+
+    [JsonPropertyName("correlationId")]
+    public string? CorrelationId { get; set; }
 }

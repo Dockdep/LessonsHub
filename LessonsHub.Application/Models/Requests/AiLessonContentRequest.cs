@@ -4,9 +4,6 @@ namespace LessonsHub.Application.Models.Requests;
 
 public class AiLessonContentRequest
 {
-    [JsonPropertyName("planName")]
-    public string PlanName { get; set; } = string.Empty;
-
     [JsonPropertyName("topic")]
     public string Topic { get; set; } = string.Empty;
 
@@ -33,4 +30,7 @@ public class AiLessonContentRequest
 
     [JsonPropertyName("language")]
     public string? Language { get; set; }
+
+    [JsonPropertyName("correlationId")]
+    public string? CorrelationId { get; set; }
 }

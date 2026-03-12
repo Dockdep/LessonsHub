@@ -4,15 +4,6 @@ namespace LessonsHub.Application.Models.Requests;
 
 public class AiLessonExerciseRequest
 {
-    [JsonPropertyName("planName")]
-    public string PlanName { get; set; } = string.Empty;
-
-    [JsonPropertyName("planTopic")]
-    public string PlanTopic { get; set; } = string.Empty;
-
-    [JsonPropertyName("planDescription")]
-    public string PlanDescription { get; set; } = string.Empty;
-
     [JsonPropertyName("lessonType")]
     public string LessonType { get; set; } = string.Empty;
 
@@ -28,9 +19,6 @@ public class AiLessonExerciseRequest
     [JsonPropertyName("lessonDescription")]
     public string LessonDescription { get; set; } = string.Empty;
 
-    [JsonPropertyName("lessonContent")]
-    public string LessonContent { get; set; } = string.Empty;
-
     [JsonPropertyName("keyPoints")]
     public List<string> KeyPoints { get; set; } = new();
 
@@ -42,4 +30,7 @@ public class AiLessonExerciseRequest
 
     [JsonPropertyName("nativeLanguage")]
     public string? NativeLanguage { get; set; }
+
+    [JsonPropertyName("correlationId")]
+    public string? CorrelationId { get; set; }
 }

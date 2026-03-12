@@ -6,9 +6,6 @@ public class AiLessonPlanRequest
 {
 	[JsonPropertyName("lessonType")]
 	public string LessonType { get; set; } = string.Empty;
-	
-    [JsonPropertyName("planName")]
-    public string PlanName { get; set; } = string.Empty;
 
     [JsonPropertyName("topic")]
     public string Topic { get; set; } = string.Empty;
@@ -21,4 +18,7 @@ public class AiLessonPlanRequest
 
     [JsonPropertyName("language")]
     public string? Language { get; set; }
+
+    [JsonPropertyName("correlationId")]
+    public string? CorrelationId { get; set; }
 }

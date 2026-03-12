@@ -4,6 +4,9 @@ namespace LessonsHub.Application.Models.Responses;
 
 public class AiLessonResourcesResponse
 {
+    [JsonPropertyName("correlationId")]
+    public string? CorrelationId { get; set; }
+
     [JsonPropertyName("lessonName")]
     public string LessonName { get; set; } = string.Empty;
 
@@ -18,6 +21,9 @@ public class AiLessonResourcesResponse
 
     [JsonPropertyName("documentation")]
     public List<DocumentationResource> Documentation { get; set; } = new();
+
+    [JsonPropertyName("usage")]
+    public List<ModelUsage> Usage { get; set; } = new();
 }
 
 public class VideoResource

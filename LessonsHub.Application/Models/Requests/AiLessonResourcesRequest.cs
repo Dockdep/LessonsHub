@@ -18,4 +18,10 @@ public class AiLessonResourcesRequest
 
     [JsonPropertyName("lessonDescription")]
     public string LessonDescription { get; set; } = string.Empty;
+
+    [JsonPropertyName("language")]
+    public string? Language { get; set; }
+
+    [JsonPropertyName("correlationId")]
+    public string? CorrelationId { get; set; }
 }

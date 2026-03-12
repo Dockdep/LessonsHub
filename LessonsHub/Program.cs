@@ -21,6 +21,8 @@ builder.Services.AddControllers()
         options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
     });
 
+builder.Services.AddHttpContextAccessor();
+
 // Add CORS
 builder.Services.AddCors(options =>
 {
@@ -44,6 +46,9 @@ builder.Services.AddHttpClient<ILessonsAiApiClient, LessonsAiApiClient>(client =
     client.BaseAddress = new Uri(aiApiSettings.BaseUrl);
     client.Timeout = TimeSpan.FromMinutes(aiApiSettings.TimeoutMinutes);
 });
+
+// Configure Pricing into DI
+builder.Services.AddSingleton(aiApiSettings);
 
 // Configure JWT settings
 var jwtSettings = builder.Configuration

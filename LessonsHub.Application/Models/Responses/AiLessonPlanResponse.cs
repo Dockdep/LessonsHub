@@ -4,14 +4,17 @@ namespace LessonsHub.Application.Models.Responses;
 
 public class AiLessonPlanResponse
 {
-    [JsonPropertyName("planName")]
-    public string PlanName { get; set; } = string.Empty;
+    [JsonPropertyName("correlationId")]
+    public string? CorrelationId { get; set; }
 
     [JsonPropertyName("topic")]
     public string Topic { get; set; } = string.Empty;
 
     [JsonPropertyName("lessons")]
     public List<AiLessonItem> Lessons { get; set; } = new();
+
+    [JsonPropertyName("usage")]
+    public List<ModelUsage> Usage { get; set; } = new();
 }
 
 public class AiLessonItem
